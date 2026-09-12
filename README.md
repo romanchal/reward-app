@@ -27,7 +27,7 @@ Then:
 
 ```bash
 docker compose exec backend node -e "require('child_process').execSync('npx prisma migrate deploy', {stdio:'inherit'})"
-docker compose exec backend npx tsx src/scripts/seed.ts
+docker compose exec backend node dist/scripts/seed.js
 ```
 
 Or without docker:

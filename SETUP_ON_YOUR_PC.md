@@ -71,7 +71,7 @@ Leave this terminal open — closing it stops the app. Open a NEW terminal for t
 
 ```bash
 cd D:\code\reward-app
-docker compose exec backend npx tsx src/scripts/seed.ts
+docker compose exec backend node dist/scripts/seed.js
 ```
 
 You'll see logs like `[seed] tasks: 50`, `[seed] admin created: admin@example.com / password123`.
