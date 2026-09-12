@@ -61,9 +61,9 @@ docker compose up --build
 
 First run downloads images + builds — takes 5–10 minutes.
 
-**Watch the terminal output.** Eventually you will see a line ending with `api listening on :4000`. That means backend is ready. **Do NOT type that line — it is output, not a command.**
+**Just watch. Do not type anything into this terminal.** When the scrolling output slows down and you see messages about the API being ready on port 4000, the backend is running.
 
-Leave that terminal open (it keeps the app running).
+Leave this terminal open — closing it stops the app. Open a NEW terminal for the next step.
 
 ---
 
