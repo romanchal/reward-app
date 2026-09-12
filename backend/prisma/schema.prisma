@@ -1,0 +1,112 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Core enums
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum TaskStatus {
+  LIVE
+  DEMO
+}
+
+enum TransactionType {
+  TASK_REWARD
+  REFERRAL_REWARD
+}
+
+enum TransactionStatus {
+  POSTED
+}
+
+// Core Models
+model User {
+  id               String         @id @default(cuid())
+  email            String         @unique
+  emailNormalized  String         @unique
+  name             String
+  passwordHash     String         @unique
+  role             UserRole       @default(USER)
+  isVerified       Boolean        @default(false)
+  banned           Boolean        @default(false)
+  balance          Int            @default(0)
+  referralCode     String         @unique @default(cuid())
+
+  createdAt        DateTime       @default(now())
+
+  @@index([emailNormalized])
+}
+
+model Task {
+  id          String       @id
+  title       String
+  description String
+  reward      Int
+  status      TaskStatus   @default(LIVE)
+  isDemo      Boolean      @default(false)
+  createdAt   DateTime     @default(now())
+  userTasks   UserTask[]
+}
+
+model UserTask {
+  id          String     @id @default(cuid())
+  userId      String
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  taskId      String
+  task        Task       @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  completedAt DateTime   @default(now())
+  @@unique([userId, taskId])
+}
+
+model Wallet {
+  id          String        @id @default(cuid())
+  userId      String        @unique
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  balance     Int           @default(0)
+  currency    String        @default("INR")
+  createdAt   DateTime     @default(now())
+}
+
+model WalletTransaction {
+  id           String         @id @default(cuid())
+  userId       String
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  wallet       Wallet         @relation(fields: [walletId], references: [id])
+  walletId     String
+  taskId       String?
+  task         Task?          @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  type         TransactionType
+  amount       Int
+  currency     String
+  status       TransactionStatus @default(POSTED)
+  balanceAfter Int
+  referenceId  String?
+  createdAt    DateTime        @default(now())
+}
+
+enum ReferralStatus {
+  PENDING
+  QUALIFIED
+  REJECTED
+}
+
+model Referral {
+  id              String       @id @default(cuid())
+  userId          String
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  referredBy      User           @relation("ReferralUser", fields: [referredByUserId], references: [id])
+  referredByUserId String?
+  code            String       @unique
+  status          ReferralStatus @default(PENDING)
+  createdAt       DateTime     @default(now())
+
+  @@index([referredByUserId])
+}
