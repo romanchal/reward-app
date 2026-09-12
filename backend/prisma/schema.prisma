@@ -8,23 +8,134 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum UserRole { USER ADMIN }
-enum TaskStatus { DRAFT LIVE PAUSED EXPIRED DEMO }
-enum TransactionType { TASK_REWARD REFERRAL_REWARD DAILY_REWARD MISSION_REWARD REWARD_ORDER WITHDRAWAL ADJUSTMENT }
-enum TransactionStatus { POSTED ADJUSTMENT FAILED }
-enum OfferStatus { ACTIVE PAUSED EXPIRED }
-enum OfferCallbackStatus { PENDING VERIFIED REJECTED }
-enum ReferralStatus { PENDING QUALIFIED REJECTED }
-enum MissionStatus { OPEN COMPLETE EXPIRED }
-enum RewardStatus { AVAILABLE CLAIMED FULFILLED EXPIRED }
-enum RewardOrderStatus { PENDING PROCESSING FULFILLED REJECTED }
-enum WithdrawalStatus { PENDING UNDER_REVIEW APPROVED PROCESSING COMPLETED FAILED REJECTED }
-enum NotificationStatus { SENT FAILED READ UNREAD }
-enum TicketStatus { OPEN IN_PROGRESS CLOSED }
-enum FraudStatus { CLEAN REVIEW SUSPICIOUS BANNED }
-enum AuditAction { LOGIN REGISTER REFRESH LOGOUT TASK_COMPLETE REWARD_ORDER WITHDRAWAL_CREATE WITHDRAWAL_APPROVE WITHDRAWAL_REJECT WITHDRAWAL_COMPLETE USER_SUSPEND USER_RESTORE TASK_CREATE TASK_UPDATE TASK_DISABLE SETTINGS_UPDATE FRAUD_REVIEW }
-enum LeaderboardPeriod { WEEKLY MONTHLY }
-enum CampaignStatus { DRAFT ACTIVE PAUSED EXPIRED }
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum TaskStatus {
+  DRAFT
+  LIVE
+  PAUSED
+  EXPIRED
+  DEMO
+}
+
+enum TransactionType {
+  TASK_REWARD
+  REFERRAL_REWARD
+  DAILY_REWARD
+  MISSION_REWARD
+  REWARD_ORDER
+  WITHDRAWAL
+  ADJUSTMENT
+}
+
+enum TransactionStatus {
+  POSTED
+  ADJUSTMENT
+  FAILED
+}
+
+enum OfferStatus {
+  ACTIVE
+  PAUSED
+  EXPIRED
+}
+
+enum OfferCallbackStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum ReferralStatus {
+  PENDING
+  QUALIFIED
+  REJECTED
+}
+
+enum MissionStatus {
+  OPEN
+  COMPLETE
+  EXPIRED
+}
+
+enum RewardStatus {
+  AVAILABLE
+  CLAIMED
+  FULFILLED
+  EXPIRED
+}
+
+enum RewardOrderStatus {
+  PENDING
+  PROCESSING
+  FULFILLED
+  REJECTED
+}
+
+enum WithdrawalStatus {
+  PENDING
+  UNDER_REVIEW
+  APPROVED
+  PROCESSING
+  COMPLETED
+  FAILED
+  REJECTED
+}
+
+enum NotificationStatus {
+  SENT
+  FAILED
+  READ
+  UNREAD
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  CLOSED
+}
+
+enum FraudStatus {
+  CLEAN
+  REVIEW
+  SUSPICIOUS
+  BANNED
+}
+
+enum AuditAction {
+  LOGIN
+  REGISTER
+  REFRESH
+  LOGOUT
+  TASK_COMPLETE
+  REWARD_ORDER
+  WITHDRAWAL_CREATE
+  WITHDRAWAL_APPROVE
+  WITHDRAWAL_REJECT
+  WITHDRAWAL_COMPLETE
+  USER_SUSPEND
+  USER_RESTORE
+  TASK_CREATE
+  TASK_UPDATE
+  TASK_DISABLE
+  SETTINGS_UPDATE
+  FRAUD_REVIEW
+}
+
+enum LeaderboardPeriod {
+  WEEKLY
+  MONTHLY
+}
+
+enum CampaignStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  EXPIRED
+}
 
 model User {
   id                  String              @id @default(cuid())
