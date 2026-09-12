@@ -35,5 +35,21 @@ services:
       postgres:
         condition: service_healthy
 
+  web:
+    build:
+      context: ./web
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
+  admin:
+    build:
+      context: ./admin
+    ports:
+      - "5174:80"
+    depends_on:
+      - backend
+
 volumes:
   postgres-data:
