@@ -59,13 +59,11 @@ Make sure Docker Desktop is running. Then:
 docker compose up --build
 ```
 
-First run downloads images + builds — takes 5–10 minutes. Wait until you see:
+First run downloads images + builds — takes 5–10 minutes.
 
-```
-backend  | [reward-app] api listening on :4000
-```
+**Watch the terminal output.** Eventually you will see a line ending with `api listening on :4000`. That means backend is ready. **Do NOT type that line — it is output, not a command.**
 
-Leave that terminal open.
+Leave that terminal open (it keeps the app running).
 
 ---
 
@@ -92,6 +90,10 @@ You'll see logs like `[seed] tasks: 50`, `[seed] admin created: admin@example.co
 ---
 
 ## Common problems
+
+**Error: `open //./pipe/dockerDesktopLinuxEngine: The system cannot find the file specified`**
+Docker Desktop is not running. Open the Docker Desktop app from Start menu. Wait until bottom-left shows green "Engine running", then retry.
+If Docker Desktop won't start, run `wsl --install` in PowerShell (as admin), reboot, then open Docker Desktop again.
 
 **Docker says "port already in use"**
 Stop whatever is using ports 4000 / 5173 / 5174 / 5432, then run `docker compose up` again.
