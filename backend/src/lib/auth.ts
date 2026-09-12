@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import jwt, { type JwtPayload } from 'jsonwebtoken';
+import jwt, { type JwtPayload, type SignOptions } from 'jsonwebtoken';
 import type { UserRole } from '@prisma/client';
 
 export interface TokenPayload {
@@ -10,19 +10,21 @@ export interface TokenPayload {
 }
 
 export function signAccessToken(user: { id: string; role: UserRole }, secret: string) {
-  return jwt.sign({ type: 'access' } as TokenPayload, secret, {
+  const opts: SignOptions = {
     subject: user.id,
-    expiresIn: process.env.ACCESS_TOKEN_TTL ?? '15m',
+    expiresIn: (process.env.ACCESS_TOKEN_TTL ?? '15m') as SignOptions['expiresIn'],
     jwtid: crypto.randomBytes(12).toString('hex'),
-  });
+  };
+  return jwt.sign({ type: 'access' }, secret, opts);
 }
 
 export function signRefreshToken(user: { id: string; role: UserRole }, secret: string) {
-  return jwt.sign({ type: 'refresh' } as TokenPayload, secret, {
+  const opts: SignOptions = {
     subject: user.id,
-    expiresIn: process.env.REFRESH_TOKEN_TTL ?? '30d',
+    expiresIn: (process.env.REFRESH_TOKEN_TTL ?? '30d') as SignOptions['expiresIn'],
     jwtid: crypto.randomBytes(12).toString('hex'),
-  });
+  };
+  return jwt.sign({ type: 'refresh' }, secret, opts);
 }
 
 export function verifyToken(token: string, secret: string, expectedType?: 'access' | 'refresh'): TokenPayload | null {

@@ -15,7 +15,7 @@ export function taskRoutes(prisma: PrismaClient) {
 
   router.post('/:id/complete', asyncHandler(async (req, res) => {
     const input = completeSchema.parse(req.body ?? {});
-    const result = await completeTask(prisma, req.user!.id, req.params.id, input.idempotencyKey);
+    const result = await completeTask(prisma, req.user!.id, String(req.params.id), input.idempotencyKey);
     res.json(result);
   }));
 

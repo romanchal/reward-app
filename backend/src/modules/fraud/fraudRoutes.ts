@@ -13,7 +13,7 @@ export function fraudRoutes(prisma: PrismaClient) {
   }));
   router.post('/:id/review', asyncHandler(async (req, res) => {
     const input = reviewSchema.parse(req.body);
-    res.json(await reviewFraudEvent(prisma, req.params.id, input.decision));
+    res.json(await reviewFraudEvent(prisma, String(req.params.id), input.decision));
   }));
   return router;
 }

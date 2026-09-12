@@ -1,10 +1,13 @@
-import { createConnection } from 'pg-mem';
-import { PrismaPg } from '@prisma/adapter-pg';
+import { newDb } from 'pg-mem';
 import { PrismaClient } from '@prisma/client';
 
 export function createTestPrisma() {
-  const connection = createConnection();
-  const adapter = new PrismaPg(connection);
-  const prisma = new PrismaClient({ adapter });
-  return { prisma, connection };
+  const db = newDb();
+  const adapter = db.adapters.createPgPromise();
+  const prisma = new PrismaClient();
+  return { prisma, connection: adapter };
+}
+
+export function createConnection() {
+  return newDb();
 }

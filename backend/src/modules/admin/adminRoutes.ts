@@ -32,7 +32,7 @@ export function adminRoutes(prisma: PrismaClient) {
   }));
   router.post('/users/:id/ban', asyncHandler(async (req, res) => {
     const input = banSchema.parse(req.body);
-    res.json(await setUserBanned(prisma, req.params.id, input.banned));
+    res.json(await setUserBanned(prisma, String(req.params.id), input.banned));
   }));
 
   router.get('/tasks', asyncHandler(async (_req, res) => {
@@ -45,32 +45,32 @@ export function adminRoutes(prisma: PrismaClient) {
   }));
   router.patch('/tasks/:id', asyncHandler(async (req, res) => {
     const input = taskSchema.partial({ title: true, reward: true }).parse(req.body);
-    res.json(await upsertTask(prisma, req.params.id, input as any));
+    res.json(await upsertTask(prisma, String(req.params.id), input as any));
   }));
-  router.post('/tasks/:id/disable', asyncHandler(async (req, res) => res.json(await disableTask(prisma, req.params.id))));
+  router.post('/tasks/:id/disable', asyncHandler(async (req, res) => res.json(await disableTask(prisma, String(req.params.id)))));
 
   router.get('/withdrawals', asyncHandler(async (req, res) => {
     res.json(await listAllWithdrawals(prisma, req.query.status as any));
   }));
   router.post('/withdrawals/:id/approve', asyncHandler(async (req, res) => {
     const input = withdrawalActionSchema.parse(req.body ?? {});
-    res.json(await transitionWithdrawal(prisma, req.params.id, 'APPROVED', input.reason));
+    res.json(await transitionWithdrawal(prisma, String(req.params.id), 'APPROVED', input.reason));
   }));
   router.post('/withdrawals/:id/reject', asyncHandler(async (req, res) => {
     const input = withdrawalActionSchema.parse(req.body ?? {});
-    res.json(await transitionWithdrawal(prisma, req.params.id, 'REJECTED', input.reason));
+    res.json(await transitionWithdrawal(prisma, String(req.params.id), 'REJECTED', input.reason));
   }));
   router.post('/withdrawals/:id/process', asyncHandler(async (req, res) => {
-    res.json(await transitionWithdrawal(prisma, req.params.id, 'PROCESSING'));
+    res.json(await transitionWithdrawal(prisma, String(req.params.id), 'PROCESSING'));
   }));
   router.post('/withdrawals/:id/complete', asyncHandler(async (req, res) => {
-    res.json(await transitionWithdrawal(prisma, req.params.id, 'COMPLETED'));
+    res.json(await transitionWithdrawal(prisma, String(req.params.id), 'COMPLETED'));
   }));
 
   router.get('/fraud', asyncHandler(async (req, res) => res.json(await listFraudEvents(prisma, { status: req.query.status as string | undefined }))));
   router.post('/fraud/:id/review', asyncHandler(async (req, res) => {
     const input = fraudReviewSchema.parse(req.body);
-    res.json(await reviewFraudEvent(prisma, req.params.id, input.decision));
+    res.json(await reviewFraudEvent(prisma, String(req.params.id), input.decision));
   }));
 
   router.get('/settings', asyncHandler(async (_req, res) => res.json(await getSettings(prisma))));

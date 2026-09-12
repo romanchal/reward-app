@@ -11,7 +11,7 @@ export function missionRoutes(prisma: PrismaClient) {
   }));
 
   router.post('/:id/complete', asyncHandler(async (req, res) => {
-    res.json(await completeMission(prisma, req.user!.id, req.params.id));
+    res.json(await completeMission(prisma, req.user!.id, String(req.params.id)));
   }));
 
   return router;
