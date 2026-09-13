@@ -86,6 +86,10 @@ You'll see logs like `[seed] tasks: 50`, `[seed] admin created: admin@example.co
   - Login: `admin@example.com` / `password123`
 - **Backend health** → http://localhost:4000/api/health
   - Should show `{"status":"ok",...}`
+- **Backend readiness (checks DB)** → http://localhost:4000/api/ready
+  - Shows `{"status":"ready"}` when database is reachable
+- **Web health** → http://localhost:5173/healthz (returns `ok`)
+- **Admin health** → http://localhost:5174/healthz
 
 ---
 
