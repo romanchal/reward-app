@@ -1,8 +1,20 @@
-import type { PrismaClient, WithdrawalStatus } from '@prisma/client';
+import type { PrismaClient, WithdrawalStatus, Withdrawal } from '@prisma/client';
 import { HttpError } from '../../lib/http-error';
 import { postLedger } from '../wallet/walletService';
+import { encryptString, safeDecrypt } from '../../lib/crypto';
 
 const MIN_WITHDRAWAL = 100;
+
+function maskRecipient(plain: string | null): string {
+  if (!plain) return '';
+  if (plain.length <= 4) return '****';
+  return `${plain.slice(0, 2)}****${plain.slice(-2)}`;
+}
+
+function decryptWithdrawal<T extends Withdrawal>(w: T, reveal: boolean): T {
+  const plain = safeDecrypt(w.recipient);
+  return { ...w, recipient: reveal ? (plain ?? '') : maskRecipient(plain) } as T;
+}
 
 export interface WithdrawalInput {
   amount: number;
@@ -27,7 +39,7 @@ export async function createWithdrawal(prisma: PrismaClient, userId: string, inp
         amount: input.amount,
         currency: input.currency ?? wallet.currency,
         method: input.method,
-        recipient: input.recipient,
+        recipient: encryptString(input.recipient),
         status: 'PENDING',
       },
     });
@@ -36,7 +48,7 @@ export async function createWithdrawal(prisma: PrismaClient, userId: string, inp
 
 export async function listUserWithdrawals(prisma: PrismaClient, userId: string) {
   const items = await prisma.withdrawal.findMany({ where: { userId }, orderBy: { createdAt: 'desc' } });
-  return { items };
+  return { items: items.map((w) => decryptWithdrawal(w, false)) };
 }
 
 export async function listAllWithdrawals(prisma: PrismaClient, status?: WithdrawalStatus) {
@@ -46,7 +58,7 @@ export async function listAllWithdrawals(prisma: PrismaClient, status?: Withdraw
     take: 200,
     include: { user: { select: { id: true, email: true, name: true } } },
   });
-  return { items };
+  return { items: items.map((w) => ({ ...decryptWithdrawal(w, true), user: w.user })) };
 }
 
 export async function transitionWithdrawal(prisma: PrismaClient, id: string, next: WithdrawalStatus, reason?: string) {

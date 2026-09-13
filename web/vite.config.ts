@@ -10,4 +10,20 @@ export default defineConfig({
       '/api': { target: process.env.API_URL || 'http://localhost:4000', changeOrigin: true },
     },
   },
+  build: {
+    sourcemap: false,
+    minify: 'esbuild',
+    target: 'es2020',
+    rollupOptions: {
+      output: {
+        entryFileNames: 'assets/[hash].js',
+        chunkFileNames: 'assets/[hash].js',
+        assetFileNames: 'assets/[hash][extname]',
+      },
+    },
+  },
+  esbuild: {
+    drop: ['console', 'debugger'],
+    legalComments: 'none',
+  },
 });
