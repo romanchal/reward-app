@@ -47,3 +47,19 @@ input:focus { outline: none; border-color: var(--primary); }
 
 .admin-login { min-height: 100vh; display: flex; align-items: center; justify-content: center; }
 .auth-card { width: 380px; display: flex; flex-direction: column; gap: 12px; }
+
+/* Admin: fatal error boundary shell */
+.admin-fatal {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.admin-fatal .card {
+  max-width: 420px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
