@@ -1,0 +1,30 @@
+services:
+  postgres:
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD required}
+    ports: []
+
+  backend:
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL required}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET required}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?JWT_REFRESH_SECRET required}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:?ENCRYPTION_KEY required (32-byte hex)}
+      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:?FRONTEND_ORIGIN required}
+      ADMIN_ORIGIN: ${ADMIN_ORIGIN:?ADMIN_ORIGIN required}
+      PAYMENT_MODE: demo
+      OFFER_MODE: ${OFFER_MODE:-demo}
+      EMAIL_MODE: ${EMAIL_MODE:-console}
+    ports: []
+    restart: always
+
+  web:
+    ports:
+      - "127.0.0.1:5173:80"
+    restart: always
+
+  admin:
+    ports:
+      - "127.0.0.1:5174:80"
+    restart: always
