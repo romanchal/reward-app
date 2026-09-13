@@ -77,15 +77,20 @@ export function authRoutes(prisma: PrismaClient) {
   }));
 
   router.get('/me', asyncHandler(async (req, res) => {
-    res.json({ user: publicUser(req.user! ) });
+    const user = await prisma.user.findUnique({ where: { id: req.user!.id } });
+    if (!user) throw new HttpError(404, 'User not found');
+    res.json({ user: publicUser(user) });
   }));
 
   router.patch('/me', asyncHandler(async (req, res) => {
     const input = z.object({ name: z.string().min(2).max(100).optional(), email: z.string().email().optional() }).parse(req.body);
     const updates: any = {};
     if (input.name !== undefined) updates.name = input.name;
-    if (input.email !== undefined) updates.email = input.email.toLowerCase();
-    const user = await prisma.user.update({ where: { id: req.user!.id }, data: updates, select: { id: true, email: true, name: true, role: true, isVerified: true, banned: true } });
+    if (input.email !== undefined) {
+      updates.email = input.email.toLowerCase();
+      updates.emailNormalized = input.email.toLowerCase();
+    }
+    const user = await prisma.user.update({ where: { id: req.user!.id }, data: updates });
     res.json({ user: publicUser(user) });
   }));
 
