@@ -78,7 +78,14 @@ export function createApp(prisma: PrismaClient) {
   app.use(rateLimit);
 
   app.get('/api/health', (_req, res) => {
-    res.json({ status: 'ok', env: config.nodeEnv, mode: config.paymentMode, uptimeSeconds: Math.round(process.uptime()) });
+    res.json({
+      status: 'ok',
+      env: config.nodeEnv,
+      mode: config.paymentMode,
+      uptimeSeconds: Math.round(process.uptime()),
+      version: process.env.APP_VERSION ?? 'dev',
+      commit: process.env.APP_COMMIT ?? 'unknown',
+    });
   });
 
   app.get('/api/ready', async (_req, res) => {
