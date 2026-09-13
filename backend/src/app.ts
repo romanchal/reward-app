@@ -58,14 +58,16 @@ export function createApp(prisma: PrismaClient) {
     credentials: true,
     methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Authorization', 'Content-Type', 'X-Request-Id', 'Idempotency-Key'],
+    exposedHeaders: ['RateLimit-Limit', 'RateLimit-Remaining', 'Retry-After', 'X-Request-Id'],
     maxAge: 600,
   }));
   app.disable('x-powered-by');
   app.set('trust proxy', 1);
   app.use(express.json({ limit: '256kb' }));
 
-  app.use((req: Request, _res: Response, next: NextFunction) => {
+  app.use((req: Request, res: Response, next: NextFunction) => {
     req.requestId = req.get('X-Request-Id') || randomUUID();
+    res.setHeader('X-Request-Id', req.requestId);
     next();
   });
 
