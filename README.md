@@ -1,5 +1,7 @@
 # Reward App
 
+[![CI](https://github.com/NectarScript/reward-app/actions/workflows/ci.yml/badge.svg)](https://github.com/NectarScript/reward-app/actions/workflows/ci.yml)
+
 Local-first, demo-only rewards platform. Modular monolith: Express + Prisma + Postgres backend, React + Vite user web, React + Vite admin console.
 
 **Demo mode only — no real payments are made.**
@@ -49,6 +51,13 @@ npm run dev
 ## Env
 
 See `.env.example`. Never commit real secrets.
+
+## Documentation
+
+- [SETUP_ON_YOUR_PC.md](SETUP_ON_YOUR_PC.md) — step-by-step local setup
+- [DEPLOY.md](DEPLOY.md) — production deployment with TLS reverse proxy
+- [SECURITY.md](SECURITY.md) — security posture, threat model, gaps
+- [web/PRODUCTION_BASE.md](web/PRODUCTION_BASE.md) — web UI prod baseline
 
 ## Notes
 
