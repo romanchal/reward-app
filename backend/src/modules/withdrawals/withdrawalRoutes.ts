@@ -3,6 +3,7 @@ import { z } from 'zod';
 import type { PrismaClient } from '@prisma/client';
 import { asyncHandler } from '../../lib/http-error';
 import { createWithdrawal, listUserWithdrawals } from './withdrawalService';
+import { writeAudit } from '../../lib/audit';
 
 const createSchema = z.object({
   amount: z.number().int().positive(),
@@ -16,7 +17,9 @@ export function withdrawalRoutes(prisma: PrismaClient) {
   router.get('/', asyncHandler(async (req, res) => res.json(await listUserWithdrawals(prisma, req.user!.id))));
   router.post('/', asyncHandler(async (req, res) => {
     const input = createSchema.parse(req.body);
-    res.json(await createWithdrawal(prisma, req.user!.id, input));
+    const created = await createWithdrawal(prisma, req.user!.id, input);
+    await writeAudit(prisma, { actorUserId: req.user!.id, action: 'WITHDRAWAL_CREATE', entityType: 'Withdrawal', entityId: created.id, details: { amount: input.amount, method: input.method } });
+    res.json(created);
   }));
   return router;
 }

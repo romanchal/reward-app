@@ -3,6 +3,7 @@ import { z } from 'zod';
 import type { PrismaClient } from '@prisma/client';
 import { asyncHandler } from '../../lib/http-error';
 import { completeTask, listTasks } from './taskService';
+import { writeAudit } from '../../lib/audit';
 
 const completeSchema = z.object({ idempotencyKey: z.string().min(1).max(128) });
 
@@ -16,6 +17,9 @@ export function taskRoutes(prisma: PrismaClient) {
   router.post('/:id/complete', asyncHandler(async (req, res) => {
     const input = completeSchema.parse(req.body ?? {});
     const result = await completeTask(prisma, req.user!.id, String(req.params.id), input.idempotencyKey);
+    if (!result.alreadyCompleted) {
+      await writeAudit(prisma, { actorUserId: req.user!.id, action: 'TASK_COMPLETE', entityType: 'Task', entityId: String(req.params.id), details: { reward: result.reward } });
+    }
     res.json(result);
   }));
 

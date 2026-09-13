@@ -1,5 +1,5 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import { api, setToken, getToken } from './api';
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
+import { api, setToken, tryRestoreSession, bindSessionLostHandler } from './api';
 
 interface User {
   id: string;
@@ -31,29 +31,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const loadMe = async () => {
-    if (!getToken()) { setUser(null); setLoading(false); return; }
+  const loadMe = useCallback(async () => {
     try {
       const res = await api<{ user: User }>('/auth/me');
       setUser(res.user);
     } catch {
-      setToken(null);
       setUser(null);
-    } finally {
-      setLoading(false);
     }
-  };
+  }, []);
 
-  useEffect(() => { loadMe(); }, []);
+  useEffect(() => {
+    bindSessionLostHandler(() => setUser(null));
+    (async () => {
+      const restored = await tryRestoreSession();
+      if (restored) await loadMe();
+      setLoading(false);
+    })();
+  }, [loadMe]);
 
   const login = async (email: string, password: string) => {
-    const res = await api<{ accessToken: string; user: User }>('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) });
+    const res = await api<{ accessToken: string; user: User }>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    });
     setToken(res.accessToken);
     setUser(res.user);
   };
 
   const register = async (email: string, password: string, name: string) => {
-    const res = await api<{ accessToken: string; user: User }>('/auth/register', { method: 'POST', body: JSON.stringify({ email, password, name }) });
+    const res = await api<{ accessToken: string; user: User }>('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({ email, password, name }),
+    });
     setToken(res.accessToken);
     setUser(res.user);
   };
@@ -64,11 +73,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   };
 
-  const updateUser = (user: { name: string; email: string }) => {
-    setUser((current) => current ? { ...current, ...user } : current);
+  const updateUser = (u: { name: string; email: string }) => {
+    setUser((current) => current ? { ...current, ...u } : current);
   };
 
-  return <Ctx.Provider value={{ user, loading, login, register, logout, refresh: loadMe, updateUser }}>{children}</Ctx.Provider>;
+  return (
+    <Ctx.Provider value={{ user, loading, login, register, logout, refresh: loadMe, updateUser }}>
+      {children}
+    </Ctx.Provider>
+  );
 }
 
 export function useAuth() {
