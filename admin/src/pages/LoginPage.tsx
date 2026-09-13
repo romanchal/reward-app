@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { login } from '../lib/api';
 
 export function LoginPage({ onDone }: { onDone: () => void }) {
-  const [email, setEmail] = useState('admin@example.com');
-  const [password, setPassword] = useState('password123');
+  const isDev = import.meta.env.DEV;
+  const [email, setEmail] = useState(isDev ? 'admin@example.com' : '');
+  const [password, setPassword] = useState(isDev ? 'password123' : '');
   const [err, setErr] = useState('');
 
   const submit = async (e: React.FormEvent) => {

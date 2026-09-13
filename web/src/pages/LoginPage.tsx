@@ -7,8 +7,9 @@ export function LoginPage() {
   const { login } = useAuth();
   const { notify } = useToast();
   const nav = useNavigate();
-  const [email, setEmail] = useState('demo1@example.com');
-  const [password, setPassword] = useState('password123');
+  const isDev = import.meta.env.DEV;
+  const [email, setEmail] = useState(isDev ? 'demo1@example.com' : '');
+  const [password, setPassword] = useState(isDev ? 'password123' : '');
   const [err, setErr] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -28,7 +29,7 @@ export function LoginPage() {
         <label>Password<input value={password} onChange={(e) => setPassword(e.target.value)} type="password" required autoComplete="current-password" /></label>
         {err && <p className="err" role="alert">{err}</p>}
         <button className="btn btn-primary" type="submit" disabled={submitting}>{submitting ? 'Signing in…' : 'Sign in'}</button>
-        <p className="auth-note">Demo login is prefilled · no real payments happen.</p>
+        {isDev && <p className="auth-note">Demo login is prefilled · no real payments happen.</p>}
         <p className="muted auth-switch">New here? <Link to="/register">Create an account</Link></p>
       </form>
     </div>
