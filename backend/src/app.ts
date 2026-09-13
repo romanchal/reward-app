@@ -68,6 +68,12 @@ export function createApp(prisma: PrismaClient) {
     next();
   });
 
+  app.use((_req, res, next) => {
+    res.setHeader('Cache-Control', 'no-store');
+    res.setHeader('Pragma', 'no-cache');
+    next();
+  });
+
   app.use(rateLimit);
 
   app.get('/api/health', (_req, res) => {
