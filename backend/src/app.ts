@@ -53,7 +53,7 @@ export function createApp(prisma: PrismaClient) {
   app.use(cors({
     origin: (origin, cb) => {
       if (!origin || allowedOrigins.has(origin)) return cb(null, true);
-      cb(new Error('Origin not allowed by CORS'));
+      cb(null, false);
     },
     credentials: true,
     methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
