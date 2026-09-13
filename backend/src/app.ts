@@ -19,6 +19,7 @@ import { withdrawalRoutes } from './modules/withdrawals/withdrawalRoutes';
 import { offerRoutes } from './modules/offers/offerRoutes';
 import { leaderboardRoutes } from './modules/leaderboard/leaderboardRoutes';
 import { adminRoutes } from './modules/admin/adminRoutes';
+import { streakRoutes } from './modules/streak/streakRoutes';
 
 const PROTECTED_AUTH_PATHS = new Set(['/me']);
 
@@ -106,6 +107,7 @@ export function createApp(prisma: PrismaClient) {
   app.use('/api/withdrawals', guard, withdrawalRateLimit, withdrawalRoutes(prisma));
   app.use('/api/offers', guard, offerRoutes(prisma));
   app.use('/api/leaderboard', guard, leaderboardRoutes(prisma));
+  app.use('/api/streak', guard, streakRoutes(prisma));
 
   app.use('/api/admin', guard, adminMiddleware, adminRoutes(prisma));
 

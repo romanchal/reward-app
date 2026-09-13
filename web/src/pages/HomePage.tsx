@@ -23,12 +23,14 @@ export function HomePage() {
   const load = async () => {
     setError('');
     try {
-      const [missionRes, activityRes] = await Promise.all([
+      const [missionRes, activityRes, streakRes] = await Promise.all([
         api<{ items: Mission[] }>('/missions'),
         api<{ items: Activity[] }>('/wallet/transactions?limit=8'),
+        api<{ count: number }>('/streak'),
       ]);
       setMissions(missionRes.items);
       setActivity(activityRes.items);
+      setStreak(streakRes.count);
     } catch (err: any) {
       setError(err.message);
     } finally {
