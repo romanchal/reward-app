@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import request from 'supertest';
 import test from 'node:test';
 import { Prisma } from '@prisma/client';
-import { createTestPrisma } from '../src/testDatabase';
+import { createConnection, createTestPrisma } from '../src/testDatabase';
 import { createApp } from '../src/app';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));

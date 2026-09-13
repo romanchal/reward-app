@@ -11,7 +11,7 @@ import { useAuth } from './lib/auth';
 
 function Protected({ children }: { children: JSX.Element }) {
   const { user, loading } = useAuth();
-  if (loading) return <div className="page-loading">Loading...</div>;
+  if (loading) return <div className="page-loading"><span className="spinner" aria-hidden="true" />Loading your workspace…</div>;
   if (!user) return <Navigate to="/login" replace />;
   return children;
 }
