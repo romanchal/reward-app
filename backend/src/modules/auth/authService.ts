@@ -1,9 +1,9 @@
 import bcrypt from 'bcryptjs';
 import type { PrismaClient } from '@prisma/client';
-import { signAccessToken, signRefreshToken, hashToken } from '../lib/auth';
-import { normalizeEmail } from '../lib/security';
-import { HttpError } from '../lib/http-error';
-import { config } from '../config';
+import { signAccessToken, signRefreshToken, hashToken } from '../../lib/auth';
+import { normalizeEmail } from '../../lib/security';
+import { HttpError } from '../../lib/http-error';
+import config from '../../config';
 
 export interface RegisterInput {
   email: string;
@@ -28,9 +28,6 @@ export function publicUser(user: any) {
     isVerified: user.isVerified,
     banned: user.banned,
     balance: user.balance,
-    pendingBalance: user.pendingBalance,
-    xp: user.xp,
-    level: user.level,
     referralCode: user.referralCode,
     createdAt: user.createdAt,
   };
@@ -50,7 +47,7 @@ export async function registerUser(prisma: PrismaClient, input: RegisterInput) {
   const user = await prisma.$transaction(async (tx) => {
     const created = await tx.user.create({
       data: {
-        email,
+        email: email,
         emailNormalized: email,
         name: input.name.trim(),
         passwordHash,
@@ -59,7 +56,7 @@ export async function registerUser(prisma: PrismaClient, input: RegisterInput) {
       },
     });
     await tx.wallet.create({ data: { userId: created.id } });
-    await tx.referral.create({ data: { referrerId: created.id, referredUserId: created.id, code: created.referralCode } });
+    await tx.referral.create({ data: { userId: created.id, code: created.referralCode } });
     await tx.streak.create({ data: { userId: created.id } });
     return created;
   });
@@ -86,7 +83,6 @@ export async function loginUser(prisma: PrismaClient, input: LoginInput) {
     throw new HttpError(401, 'Invalid email or password');
   }
   if (user.banned) throw new HttpError(403, 'Account is suspended');
-  await prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
   return {
     user: publicUser(user),
     accessToken: signAccessToken(user, config.jwtSecret),
@@ -97,10 +93,10 @@ export async function loginUser(prisma: PrismaClient, input: LoginInput) {
 }
 
 export async function refreshTokens(prisma: PrismaClient, refreshToken: string) {
-  const payload = await import('../lib/auth').then((lib) => lib.verifyToken(refreshToken, config.refreshSecret, 'refresh'));
+  const payload = await import('../../lib/auth').then((lib) => lib.verifyToken(refreshToken, config.refreshSecret, 'refresh'));
   if (!payload) throw new HttpError(401, 'Invalid or expired refresh token');
   const existing = await prisma.refreshToken.findUnique({ where: { tokenHash: hashToken(refreshToken) } });
-  if (!existing || existing.revokedAt || existing.expiresAt < new Date()) throw new HttpError(401, 'Invalid or expired refresh token');
+  if (!existing || existing.revokedAt || (existing.expiresAt && existing.expiresAt < new Date())) throw new HttpError(401, 'Invalid or expired refresh token');
   const user = await prisma.user.findUnique({ where: { id: payload.sub } });
   if (!user || user.banned) throw new HttpError(403, 'Account is unavailable');
   await prisma.refreshToken.update({ where: { id: existing.id }, data: { revokedAt: new Date() } });

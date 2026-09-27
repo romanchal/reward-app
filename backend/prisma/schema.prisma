@@ -39,21 +39,32 @@ model User {
   banned           Boolean        @default(false)
   balance          Int            @default(0)
   referralCode     String         @unique @default(cuid())
+  deviceId         String?
+  streakId         String?
+  fraudEvents         FraudEvent[]
+  referredBy          Referral[]     @relation("ReferralUser")
+  referred            Referral[]     @relation("UserReferrals")
+  streak              Streak?
+  refreshTokens       RefreshToken[]
+  userTasks      UserTask[]
+  wallet          Wallet?
+  walletTransactions WalletTransaction[]
 
   createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
 
   @@index([emailNormalized])
 }
 
 model Task {
-  id          String       @id
-  title       String
-  description String
-  reward      Int
-  status      TaskStatus   @default(LIVE)
-  isDemo      Boolean      @default(false)
-  createdAt   DateTime     @default(now())
-  userTasks   UserTask[]
+  id           String       @id @default(cuid())
+  title        String
+  description  String
+  reward       Int
+  status       TaskStatus   @default(LIVE)
+  isDemo       Boolean      @default(false)
+  userTasks    UserTask[]
+  transactions WalletTransaction[] @relation("TaskTransactions")
 }
 
 model UserTask {
@@ -72,6 +83,7 @@ model Wallet {
   user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   balance     Int           @default(0)
   currency    String        @default("INR")
+  transactions WalletTransaction[] @relation("WalletTransactions")
   createdAt   DateTime     @default(now())
 }
 
@@ -79,17 +91,19 @@ model WalletTransaction {
   id           String         @id @default(cuid())
   userId       String
   user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  wallet       Wallet         @relation(fields: [walletId], references: [id])
   walletId     String
+  wallet       Wallet         @relation("WalletTransactions", fields: [walletId], references: [id])
   taskId       String?
-  task         Task?          @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  task         Task?          @relation("TaskTransactions", fields: [taskId], references: [id])
   type         TransactionType
   amount       Int
   currency     String
   status       TransactionStatus @default(POSTED)
   balanceAfter Int
   referenceId  String?
-  createdAt    DateTime        @default(now())
+  createdAt    DateTime       @default(now())
+
+  @@index([taskId])
 }
 
 enum ReferralStatus {
@@ -99,14 +113,58 @@ enum ReferralStatus {
 }
 
 model Referral {
-  id              String       @id @default(cuid())
+  id              String         @id @default(cuid())
   userId          String
-  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  referredBy      User           @relation("ReferralUser", fields: [referredByUserId], references: [id])
+  user            User           @relation("UserReferrals", fields: [userId], references: [id], onDelete: Cascade)
   referredByUserId String?
-  code            String       @unique
+  referredBy      User?          @relation("ReferralUser", fields: [referredByUserId], references: [id], onDelete: SetNull)
+  code            String         @unique
   status          ReferralStatus @default(PENDING)
-  createdAt       DateTime     @default(now())
+  createdAt       DateTime       @default(now())
 
   @@index([referredByUserId])
+  @@index([userId])
 }
+
+// Minimal supporting models referenced by the application code
+model FraudEvent {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  severity  String
+  score     Int
+  status    String
+  details   Json?
+  createdAt DateTime @default(now())
+}
+
+model Streak {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  count     Int      @default(0)
+  lastAt    DateTime?
+  createdAt DateTime @default(now())
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  revokedAt DateTime?
+  expiresAt DateTime?
+  createdAt DateTime @default(now())
+}
+
+model AuditLog {
+  id           String   @id @default(cuid())
+  actorUserId  String?
+  action       String
+  entityType   String
+  entityId     String
+  details      Json?
+  createdAt    DateTime @default(now())
+}
+

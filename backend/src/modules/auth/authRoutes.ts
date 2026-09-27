@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import type { PrismaClient } from '@prisma/client';
 import { asyncHandler } from '../../lib/http-error';
-import { config } from '../../config';
+import config from '../../config';
 import { loginUser, logoutUser, publicUser, registerUser, refreshTokens } from './authService';
 
 const registerSchema = z.object({
@@ -25,21 +25,21 @@ export function authRoutes(prisma: PrismaClient) {
       throw new Error('Administrator registration is disabled in this environment');
     }
     const result = await registerUser(prisma, input);
-    res.cookie('refresh_token', result.refreshToken, { httpOnly: true, sameSite: 'lax', secure: config.nodeEnv === 'production', maxAge: 30 * 24 * 60 * 60 * 1000 });
+    res.cookie('refresh_token', result.refreshToken, { httpOnly: true, sameSite: 'lax', secure: config.app.nodeEnv === 'production', maxAge: 30 * 24 * 60 * 60 * 1000 });
     res.status(201).json(result);
   }));
 
   router.post('/login', asyncHandler(async (req, res) => {
     const input = loginSchema.parse(req.body);
     const result = await loginUser(prisma, input);
-    res.cookie('refresh_token', result.refreshToken, { httpOnly: true, sameSite: 'lax', secure: config.nodeEnv === 'production', maxAge: 30 * 24 * 60 * 60 * 1000 });
+    res.cookie('refresh_token', result.refreshToken, { httpOnly: true, sameSite: 'lax', secure: config.app.nodeEnv === 'production', maxAge: 30 * 24 * 60 * 60 * 1000 });
     res.json(result);
   }));
 
   router.post('/demo-login', asyncHandler(async (req, res) => {
     const input = loginSchema.parse(req.body ?? {});
     const result = await loginUser(prisma, input);
-    res.setHeader('X-Environment', config.paymentMode === 'demo' ? 'DEMO' : 'PRODUCTION');
+    res.setHeader('X-Environment', (process.env.PAYMENT_MODE === 'demo') ? 'DEMO' : 'PRODUCTION');
     res.json(result);
   }));
 

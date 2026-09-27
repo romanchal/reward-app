@@ -15,6 +15,19 @@ declare global {
 
 export function authMiddleware(prisma: PrismaClient) {
   return async (req: Request, _res: Response, next: NextFunction) => {
+    const original = req.originalUrl || req.path || '/';
+    const isPublic =
+      original === '/' ||
+      original === '/api' ||
+      original === '/api/' ||
+      original.startsWith('/api/auth') ||
+      original === '/api/docs' ||
+      original.startsWith('/api/docs?');
+
+    if (isPublic) {
+      return next();
+    }
+
     const header = req.headers.authorization;
     const token = header?.startsWith('Bearer ') ? header.slice(7) : undefined;
     if (!token) throw new HttpError(401, 'Authentication required');
