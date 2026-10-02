@@ -11,7 +11,9 @@ export default defineConfig({
     }),
   },
   server: {
-    port: 5173,
+    host: '0.0.0.0',
+    port: 4175,
+    strictPort: false,
     open: false,
     proxy: {
       '/api': {
@@ -20,9 +22,15 @@ export default defineConfig({
       },
     },
   },
+  preview: {
+    host: '0.0.0.0',
+    port: 4175,
+    strictPort: false,
+  },
   resolve: {
+    dedupe: ['react', 'react-dom'],
     alias: {
-      '@': __dirname + '/src',
+      '@': import.meta.dirname + '/src',
     },
   },
   build: {

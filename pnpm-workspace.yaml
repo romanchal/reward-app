@@ -1,0 +1,30 @@
+{
+  "name": "reward_app_web",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "vercel": "vercel --yes web",
+    "vercel:yolo": "vercel --prod --yes web",
+    "migrate:deploy": "prisma migrate deploy",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.7",
+    "turbo": "^2.0.0",
+    "typescript": "^5.4.5"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@9.0.0",
+  "pnpm": {
+    "overrides": {
+      "typescript": "^5.4.5"
+    }
+  }
+}

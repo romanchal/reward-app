@@ -62,7 +62,9 @@ router.post('/tasks', async (req: any, res: any) => {
       req.body.description,
       Number(req.body.reward) || 0,
       req.body.status as 'LIVE' | 'DEMO',
-      req.body.isDemo
+      req.body.isDemo,
+      req.body.link,
+      req.body.imageUrl
     );
     
     res.status(201).json(result);

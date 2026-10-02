@@ -1,5 +1,4 @@
 import type { NextFunction, Request, Response } from 'express';
-import type { PrismaClient } from '@prisma/client';
 import { verifyToken } from '../lib/auth';
 import { HttpError } from '../lib/http-error';
 
@@ -13,7 +12,22 @@ declare global {
   }
 }
 
-export function authMiddleware(prisma: PrismaClient) {
+function getCookieValue(raw: string | undefined, name: string): string | undefined {
+  if (!raw) return undefined;
+  const match = raw.split(';').find((entry) => entry.trim().startsWith(`${name}=`));
+  if (!match) return undefined;
+  return decodeURIComponent(match.trim().slice(name.length + 1));
+}
+
+function extractToken(req: Request): string | undefined {
+  const header = req.headers.authorization;
+  if (header?.startsWith('Bearer ')) return header.slice(7);
+
+  const cookieToken = getCookieValue(req.headers.cookie, 'access_token') ?? getCookieValue(req.headers.cookie, 'jwt');
+  return cookieToken;
+}
+
+export function authMiddleware(prisma: any) {
   return async (req: Request, _res: Response, next: NextFunction) => {
     const original = req.originalUrl || req.path || '/';
     const isPublic =
@@ -22,14 +36,12 @@ export function authMiddleware(prisma: PrismaClient) {
       original === '/api/' ||
       original.startsWith('/api/auth') ||
       original === '/api/docs' ||
-      original.startsWith('/api/docs?');
+      original.startsWith('/api/docs?') ||
+      original.startsWith('/api/health');
 
-    if (isPublic) {
-      return next();
-    }
+    if (isPublic) return next();
 
-    const header = req.headers.authorization;
-    const token = header?.startsWith('Bearer ') ? header.slice(7) : undefined;
+    const token = extractToken(req);
     if (!token) throw new HttpError(401, 'Authentication required');
 
     const payload = verifyToken(token, process.env.JWT_SECRET ?? 'local-change-me', 'access');
@@ -63,21 +75,23 @@ export function idempotencyMiddleware(req: Request, res: Response, next: NextFun
   next();
 }
 
-export function auditMiddleware(prisma: PrismaClient) {
+export function auditMiddleware(prisma: any) {
   return async (req: Request, _res: Response, next: NextFunction) => {
     const action = req.body?.auditAction as string | undefined;
     if (!action) return next();
 
     const entityId = typeof req.params?.id === 'string' ? req.params.id : 'request';
-    await prisma.auditLog.create({
-      data: {
-        actorUserId: req.user?.id ?? null,
-        action: action as any,
-        entityType: req.route?.path?.split('/').filter(Boolean).pop() ?? 'request',
-        entityId,
-        details: req.body,
-      },
-    }).catch(() => undefined);
+    await prisma.auditLog
+      .create({
+        data: {
+          actorUserId: req.user?.id ?? null,
+          action: action as any,
+          entityType: req.route?.path?.split('/').filter(Boolean).pop() ?? 'request',
+          entityId,
+          details: req.body,
+        },
+      })
+      .catch(() => undefined);
 
     next();
   };

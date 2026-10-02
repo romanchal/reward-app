@@ -10,10 +10,9 @@ import { createApp } from '../src/app';
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
 async function bootstrap() {
-  const connection = createConnection();
   const migration = await readFile(new URL('../prisma/migrations/20260910000000_init/migration.sql', import.meta.url), 'utf8');
+  const { prisma, connection } = createTestPrisma();
   connection.exec(migration);
-  const { prisma } = createTestPrisma(connection);
   const app = createApp(prisma);
   return { app, prisma, connection };
 }

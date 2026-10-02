@@ -8,6 +8,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import http from 'node:http';
+import crypto from 'node:crypto';
 import { onExit } from 'signal-exit';
 
 import config from './config';
@@ -18,6 +19,9 @@ import { auditMiddleware } from './middleware/audit';
 import { errorHandler } from './lib/http-error';
 
 const app = express();
+// trust proxy when deployed behind a load balancer / reverse proxy
+// Set to false for development, or specific count for production
+app.set('trust proxy', false);
 const PORT = Number(process.env.PORT ?? config.app.port ?? 4000);
 const isProduction = config.app.nodeEnv === 'production';
 const prisma = getPrismaClient();
@@ -40,7 +44,7 @@ app.use(
   })
 );
 
-const allowedOrigins = (process.env.ALLOWED_ORIGINS ?? 'http://localhost:5173,http://localhost:5174')
+const allowedOrigins = (process.env.ALLOWED_ORIGINS ?? 'http://localhost:4175,http://localhost:4176,http://localhost:4179,http://localhost:4180,http://localhost:5173,http://localhost:5174')
   .split(',')
   .map((origin) => origin.trim())
   .filter(Boolean);
@@ -69,14 +73,41 @@ const limiter = rateLimit({
   message: { error: 'Too many requests, please try again later.', retryAfter: 60 },
 });
 
+const authLimiter = rateLimit({
+  windowMs: 15 * 60_000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many authentication attempts. Try again later.' },
+});
+
 app.use('/api/', limiter);
+app.use('/api/auth', authLimiter);
 app.use((req, _res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
   next();
 });
 
-app.use(express.json({ limit: '10kb' }));
-app.use(express.urlencoded({ extended: false, limit: '10kb' }));
+// assign a request id and track simple metrics
+app.locals.requestCount = 0;
+app.locals.idempotency = new Map<string, unknown>();
+app.use((req, res, next) => {
+  const rid = (req.headers['x-request-id'] as string) || crypto.randomUUID();
+  (req as any).requestId = rid;
+  res.setHeader('X-Request-Id', rid);
+  app.locals.requestCount = (app.locals.requestCount || 0) + 1;
+
+  const start = Date.now();
+  res.on('finish', () => {
+    const ms = Date.now() - start;
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.path} ${res.statusCode} - ${ms}ms - rid=${rid}`);
+  });
+
+  next();
+});
+
+app.use(express.json({ limit: '100kb' }));
+app.use(express.urlencoded({ extended: false, limit: '100kb' }));
 
 app.get('/health', (_req, res) => {
   res.json({
@@ -87,12 +118,54 @@ app.get('/health', (_req, res) => {
   });
 });
 
+// basic metrics endpoint for dashboards / probes
+app.get('/api/metrics', async (_req, res) => {
+  try {
+    const mem = process.memoryUsage();
+    res.json({
+      status: 'ok',
+      uptime: process.uptime(),
+      requests: app.locals.requestCount || 0,
+      memory: {
+        rss: mem.rss,
+        heapTotal: mem.heapTotal,
+        heapUsed: mem.heapUsed,
+      },
+      env: process.env.NODE_ENV || 'development',
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'failed to collect metrics' });
+  }
+});
+
 app.get('/', (_req, res) => {
   res.json({
     name: process.env.APP_NAME || 'Reward App',
     version: process.env.APP_VERSION || '1.0.0',
     environment: process.env.NODE_ENV || 'development',
   });
+});
+
+app.get('/api', (_req, res) => {
+  res.json({
+    name: process.env.APP_NAME || 'Reward App',
+    version: process.env.APP_VERSION || '1.0.0',
+    environment: process.env.NODE_ENV || 'development',
+    status: 'ok',
+    docs: '/api/docs',
+    health: '/health',
+    endpoints: [
+      '/api/auth/register',
+      '/api/auth/login',
+      '/api/tasks',
+      '/api/wallet/balance',
+      '/api/admin/tasks',
+    ],
+  });
+});
+
+app.get('/api/', (_req, res) => {
+  res.redirect('/api');
 });
 
 app.use('/api', authMiddleware(prisma));

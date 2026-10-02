@@ -1,0 +1,235 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum TaskType {
+  ARTICLE
+  VIDEO
+  OFFER
+  REEL
+}
+
+enum TaskStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  COMPLETED
+  ARCHIVED
+}
+
+enum RewardKind {
+  COIN
+  DIAMOND
+}
+
+enum TransactionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  COMPLETED
+}
+
+enum PaymentMethod {
+  UPI
+  BANK
+  WALLET
+}
+
+enum AuditAction {
+  LOGIN
+  TASK_COMPLETE
+  WALLET_UPDATE
+  WITHDRAWAL_APPROVE
+  WITHDRAWAL_REJECT
+  SETTINGS_UPDATE
+  CACHE_CLEAR
+  ADMIN_ACTION
+}
+
+model User {
+  id              String            @id @default(cuid())
+  email           String            @unique
+  emailVerified   Boolean           @default(false)
+  name            String
+  passwordHash    String
+  role            Role              @default(USER)
+  avatarUrl       String?
+  countryCode     String?
+  phone           String?
+  coins           Int               @default(0)
+  diamonds        Int               @default(0)
+  isBlocked       Boolean           @default(false)
+  referredBy      String?
+  referralCode    String            @unique @default(cuid())
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  tasks           UserTask[]
+  referrals       Referral[]        @relation("UserReferrals")
+  referredByUser  Referral[]        @relation("ReferredByUser")
+  wallet          Wallet?
+  transactions    WalletTransaction[]
+  payoutRequests  WithdrawalRequest[]
+  sessions        Session[]
+  auditLogs       AuditLog[]
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refreshToken String   @unique
+  userAgent    String?
+  ipAddress    String?
+  revoked      Boolean  @default(false)
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+}
+
+model Task {
+  id          String      @id @default(cuid())
+  title       String
+  description String
+  type        TaskType
+  rewardValue Int
+  rewardKind  RewardKind  @default(COIN)
+  status      TaskStatus  @default(ACTIVE)
+  category    String?
+  url         String?
+  metadata    Json?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  completions UserTask[]
+  transactions WalletTransaction[]
+}
+
+model UserTask {
+  id            String    @id @default(cuid())
+  userId        String
+  taskId        String
+  status        String    @default("pending")
+  rewardValue   Int
+  rewardKind    RewardKind @default(COIN)
+  verifiedAt    DateTime?
+  verificationRef String?
+  createdAt     DateTime  @default(now())
+
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task          Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, taskId, verificationRef])
+  @@index([userId])
+  @@index([taskId])
+}
+
+model Wallet {
+  id         String   @id @default(cuid())
+  userId     String   @unique
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  balance    Int      @default(0)
+  currency   String   @default("INR")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  transactions WalletTransaction[]
+}
+
+model WalletTransaction {
+  id          String             @id @default(cuid())
+  userId      String
+  walletId    String
+  taskId      String?
+  type        String
+  amount      Int
+  rewardKind  RewardKind         @default(COIN)
+  status      TransactionStatus  @default(PENDING)
+  meta        Json?
+  createdAt   DateTime           @default(now())
+
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  wallet      Wallet             @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  task        Task?              @relation(fields: [taskId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([walletId])
+}
+
+model Referral {
+  id            String   @id @default(cuid())
+  userId        String
+  referredById  String?
+  invitedEmail  String?
+  status        String    @default("pending")
+  rewardAmount  Int       @default(0)
+  createdAt     DateTime  @default(now())
+
+  user          User      @relation("UserReferrals", fields: [userId], references: [id], onDelete: Cascade)
+  referredBy    User?     @relation("ReferredByUser", fields: [referredById], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+}
+
+model WithdrawalRequest {
+  id          String            @id @default(cuid())
+  userId      String
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount      Int
+  method      PaymentMethod     @default(UPI)
+  accountInfo String
+  status      TransactionStatus @default(PENDING)
+  processedBy String?
+  note        String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+}
+
+model GlobalSetting {
+  id           String   @id @default(cuid())
+  key          String   @unique
+  value        String
+  category     String   @default("app")
+  description  String?
+  updatedBy    String?
+  updatedAt    DateTime @updatedAt
+}
+
+model Notification {
+  id          String   @id @default(cuid())
+  title       String
+  body        String
+  audience    String   @default("all")
+  sendAt      DateTime?
+  createdAt   DateTime @default(now())
+}
+
+model AuditLog {
+  id        String      @id @default(cuid())
+  actorUserId String?
+  action    AuditAction
+  entityType String
+  entityId  String
+  ipAddress String?
+  details   Json?
+  createdAt DateTime    @default(now())
+
+  actor     User?       @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+}
+
+model CacheEntry {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     Json
+  createdAt DateTime @default(now())
+  expiresAt DateTime?
+}

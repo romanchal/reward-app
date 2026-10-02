@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-1.1.x"]
 }
 
 datasource db {
@@ -49,6 +50,7 @@ model User {
   userTasks      UserTask[]
   wallet          Wallet?
   walletTransactions WalletTransaction[]
+  withdrawals      Withdrawal[]
 
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
@@ -60,6 +62,8 @@ model Task {
   id           String       @id @default(cuid())
   title        String
   description  String
+  link         String?
+  imageUrl     String?
   reward       Int
   status       TaskStatus   @default(LIVE)
   isDemo       Boolean      @default(false)
@@ -104,6 +108,23 @@ model WalletTransaction {
   createdAt    DateTime       @default(now())
 
   @@index([taskId])
+}
+
+model Withdrawal {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount     Int
+  currency   String   @default("INR")
+  method     String
+  recipient  String
+  status     String   @default("PENDING")
+  note       String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([status, createdAt])
+  @@index([userId, createdAt])
 }
 
 enum ReferralStatus {

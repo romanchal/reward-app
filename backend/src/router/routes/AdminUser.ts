@@ -7,6 +7,11 @@ import { prisma } from '../../db';
 
 const router = Router();
 
+router.use((req: any, res: any, next: any) => {
+  if (req.user?.role !== 'ADMIN') return res.status(403).json({ error: 'Administrator access required' });
+  next();
+});
+
 // Admin: Get users
 router.get('/users', async (req: any, res: any) => {
   try {
@@ -67,6 +72,40 @@ router.patch('/users/:id/verify', async (req: any, res: any) => {
     res.json({ success: true, user });
   } catch (error) {
     res.status(500).json({ error: 'Failed to update user' });
+  }
+});
+
+router.patch('/users/:id/ban', async (req: any, res: any) => {
+  try {
+    const banned = Boolean(req.body?.banned);
+    const user = await prisma.user.update({
+      where: { id: req.params.id },
+      data: { banned },
+      select: { id: true, email: true, name: true, role: true, banned: true },
+    });
+
+    await prisma.auditLog.create({
+      data: {
+        actorUserId: req.user?.id ?? null,
+        action: banned ? 'USER_SUSPEND' : 'USER_RESTORE',
+        entityType: 'User',
+        entityId: user.id,
+        details: { email: user.email },
+      },
+    }).catch(() => undefined);
+
+    res.json({ success: true, user });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update account access' });
+  }
+});
+
+router.get('/audit', async (req: any, res: any) => {
+  try {
+    const logs = await prisma.auditLog.findMany({ orderBy: { createdAt: 'desc' }, take: 100 });
+    res.json({ logs, total: logs.length });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to load audit activity' });
   }
 });
 

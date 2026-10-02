@@ -45,7 +45,8 @@ export async function registerUser(prisma: PrismaClient, input: RegisterInput) {
   // The schema intentionally stores deviceId on User; keep this check explicit for future fingerprinting.
   const banned = Boolean(existingDevice);
   const user = await prisma.$transaction(async (tx) => {
-    const created = await tx.user.create({
+    const t = tx as any;
+    const created = await t.user.create({
       data: {
         email: email,
         emailNormalized: email,
@@ -55,9 +56,9 @@ export async function registerUser(prisma: PrismaClient, input: RegisterInput) {
         banned,
       },
     });
-    await tx.wallet.create({ data: { userId: created.id } });
-    await tx.referral.create({ data: { userId: created.id, code: created.referralCode } });
-    await tx.streak.create({ data: { userId: created.id } });
+    await t.wallet.create({ data: { userId: created.id } });
+    await t.referral.create({ data: { userId: created.id, code: created.referralCode } });
+    await t.streak.create({ data: { userId: created.id } });
     return created;
   });
 

@@ -12,8 +12,9 @@ export default defineConfig({
     }),
   },
   resolve: {
+    dedupe: ['react', 'react-dom'],
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      '@': import.meta.dirname + '/src',
     },
   },
   build: {
@@ -21,6 +22,14 @@ export default defineConfig({
     emptyOutDir: true,
   },
   server: {
-    port: 8080,
+    host: '0.0.0.0',
+    port: 4176,
+    strictPort: false,
+    open: false,
+  },
+  preview: {
+    host: '0.0.0.0',
+    port: 4176,
+    strictPort: false,
   },
 });

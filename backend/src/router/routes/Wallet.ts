@@ -32,22 +32,31 @@ router.get('/balance', async (req: any, res: any) => {
   }
 });
 
-// Request withdrawal (Demo mode)
+// Request withdrawal and reserve the amount until an admin decision.
 router.post('/withdraw', async (req: any, res: any) => {
   try {
-    const { amount, bankAccount, bankName, bankNumber } = req.body;
+    if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
+    const amount = Number(req.body?.amount);
+    const recipient = String(req.body?.bankAccount || req.body?.recipient || 'demo');
     
     if (amount < 1 || amount > 10000) {
       return res.status(400).json({ error: 'Amount must be between 1 and 10000' });
     }
     
-    // In production, verify admin role and redirect to admin panel
-    res.json({
-      status: 'REQUESTED',
-      message: 'Withdrawal request submitted for admin approval'
+    const withdrawal = await prisma.$transaction(async (tx) => {
+      const wallet = await tx.wallet.findUnique({ where: { userId: req.user.id } });
+      if (!wallet || wallet.balance < amount) throw new Error('Insufficient wallet balance');
+      const nextBalance = wallet.balance - amount;
+      await tx.wallet.update({ where: { id: wallet.id }, data: { balance: nextBalance } });
+      await tx.user.update({ where: { id: req.user.id }, data: { balance: nextBalance } });
+      return tx.withdrawal.create({
+        data: { userId: req.user.id, amount, currency: 'INR', method: 'UPI', recipient },
+      });
     });
+
+    res.status(201).json({ status: withdrawal.status, message: 'Withdrawal request submitted for admin approval', data: withdrawal });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to process withdrawal' });
+    res.status(400).json({ error: error instanceof Error ? error.message : 'Failed to process withdrawal' });
   }
 });
 

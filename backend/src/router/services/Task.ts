@@ -49,6 +49,8 @@ export const getTaskById = async (taskId: string) => {
         title: true,
         description: true,
         reward: true,
+        link: true,
+        imageUrl: true,
         status: true,
         isDemo: true
       }
@@ -75,7 +77,9 @@ export const createTask = async (
   description: string,
   reward: number,
   status: 'LIVE' | 'DEMO',
-  isDemo?: boolean
+  isDemo?: boolean,
+  link?: string,
+  imageUrl?: string
 ) => {
   try {
     const task = await prisma.task.create({
@@ -83,10 +87,12 @@ export const createTask = async (
         title,
         description,
         reward,
+        link: link || null,
+        imageUrl: imageUrl || null,
         status,
         isDemo: isDemo || false
       },
-      select: { id: true, title: true, description: true, reward: true }
+      select: { id: true, title: true, description: true, reward: true, link: true, imageUrl: true }
     });
 
     return { success: true, data: task };
@@ -104,7 +110,7 @@ export const updateTask = async (taskId: string, data: any) => {
     const task = await prisma.task.update({
       where: { id: taskId },
       data,
-      select: { id: true, title: true, description: true, reward: true, status: true }
+      select: { id: true, title: true, description: true, reward: true, link: true, imageUrl: true, status: true }
     });
 
     if (!task) {

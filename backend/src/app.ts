@@ -1,11 +1,16 @@
 import express from 'express';
 import type { PrismaClient } from '@prisma/client';
 import { authMiddleware, adminMiddleware, auditMiddleware } from './middleware/auth';
+import { setPrismaClient } from './db';
 import router from './router';
 import { errorHandler } from './lib/http-error';
 
 export function createApp(prisma: PrismaClient) {
   const app = express();
+
+  // When tests supply a Prisma client, make it the global singleton so
+  // existing modules that import `prisma` get the test client as well.
+  setPrismaClient(prisma);
 
   app.use(express.json());
   app.use(express.urlencoded({ extended: false }));

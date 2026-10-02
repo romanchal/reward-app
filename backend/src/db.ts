@@ -18,5 +18,14 @@ export function getPrismaClient(): PrismaClient {
 }
 
 // Backwards-compatible named export used across the codebase
-export const prisma = getPrismaClient();
+export let prisma: PrismaClient = getPrismaClient();
 export default prisma;
+
+// Allow tests or bootstrappers to override the singleton Prisma client.
+export function setPrismaClient(client: PrismaClient | null) {
+  _prisma = client;
+  // update the exported `prisma` binding so modules importing `{ prisma }`
+  // receive the new client instance.
+  (exports as any).prisma = client as any;
+  prisma = client as any;
+}

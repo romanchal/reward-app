@@ -1,261 +1,91 @@
-import { BrowserRouter, NavLink, Route, Routes } from 'react-router-dom';
+import { Component, type FormEvent, type ReactNode, useEffect, useState } from 'react';
+import { BrowserRouter, NavLink, Navigate, Route, Routes, useNavigate } from 'react-router-dom';
+import { apiRequest, clearSession, getSession, saveSession, type AdminTask, type AdminUser } from './lib/api';
 
-const metrics = [
-	{ label: 'Total users', value: '24.8K', delta: '+12.4%' },
-	{ label: 'Wallet volume', value: '₹4.2M', delta: '+8.1%' },
-	{ label: 'Tasks completed', value: '14.3K', delta: '+19.7%' },
-	{ label: 'Withdrawal pending', value: '182', delta: '-3.2%' },
-];
+class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+  state = { hasError: false };
+  static getDerivedStateFromError() { return { hasError: true }; }
+  componentDidCatch(error: unknown) { console.error('Admin render error:', error); }
+  render() { return this.state.hasError ? <div className="error-screen"><h1>Reward Admin</h1><p>Please refresh the control center.</p></div> : this.props.children; }
+}
 
-const tasks = [
-	{ title: 'Profile setup', reward: 120, status: 'Active', type: 'Onboarding' },
-	{ title: 'Watch tutorial', reward: 90, status: 'Live', type: 'Education' },
-	{ title: 'Daily check-in', reward: 45, status: 'Active', type: 'Retention' },
-	{ title: 'Invite bonus', reward: 200, status: 'Draft', type: 'Referral' },
-];
+function LoginPage() {
+  const navigate = useNavigate();
+  const [email, setEmail] = useState(''); const [password, setPassword] = useState(''); const [error, setError] = useState(''); const [busy, setBusy] = useState(false);
+  async function submit(event: FormEvent) {
+    event.preventDefault(); setBusy(true); setError('');
+    try {
+      const result = await apiRequest<{ data?: { token: string; userId: string; role: string }; accessToken?: string; user?: { id: string; role: string; email: string } }>('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) });
+      const legacy = result.data;
+      const role = result.user?.role || legacy?.role;
+      const token = result.accessToken || legacy?.token;
+      if (role !== 'ADMIN') throw new Error('This account does not have admin access.');
+      if (!token) throw new Error('The server returned an incomplete session.');
+      saveSession({ token, userId: result.user?.id || legacy?.userId || '', role, email: result.user?.email || email }); navigate('/');
+    } catch (requestError) { setError(requestError instanceof Error ? requestError.message : 'Unable to sign in'); }
+    finally { setBusy(false); }
+  }
+  return <div className="admin-auth"><div className="admin-auth-box"><div className="admin-logo">R</div><span className="eyebrow">Reward operations</span><h1>Control center</h1><p>Manage members, missions, and the reward network.</p><form onSubmit={submit}><label>Email<input required type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="admin@rewardapp.com" /></label><label>Password<input required type="password" value={password} onChange={(event) => setPassword(event.target.value)} /></label>{error && <div className="form-error">{error}</div>}<button className="primary-btn" disabled={busy}>{busy ? 'Checking access...' : 'Enter control center'}</button></form></div></div>;
+}
 
-const users = [
-	{ name: 'Aisha S.', email: 'aisha@example.com', role: 'User', wallet: '₹4,320', status: 'Verified' },
-	{ name: 'Rohit K.', email: 'rohit@example.com', role: 'User', wallet: '₹1,870', status: 'Pending' },
-	{ name: 'Maya P.', email: 'maya@example.com', role: 'Admin', wallet: '₹9,480', status: 'Verified' },
-	{ name: 'Dylan C.', email: 'dylan@example.com', role: 'User', wallet: '₹2,920', status: 'Verified' },
-];
-
-const payouts = [
-	{ user: 'Nia R.', amount: '₹1,250', method: 'UPI', status: 'Pending' },
-	{ user: 'Omar T.', amount: '₹2,080', method: 'Bank', status: 'Approved' },
-	{ user: 'Priya L.', amount: '₹860', method: 'Wallet', status: 'Processing' },
-];
+function useAdminData() {
+  const [tasks, setTasks] = useState<AdminTask[]>([]); const [users, setUsers] = useState<AdminUser[]>([]); const [error, setError] = useState('');
+  useEffect(() => { Promise.all([apiRequest<{ tasks: AdminTask[] }>('/api/admin/tasks?limit=100'), apiRequest<{ users: AdminUser[] }>('/api/user/users')]).then(([taskResult, userResult]) => { setTasks(taskResult.tasks); setUsers(userResult.users); }).catch((requestError) => setError(requestError instanceof Error ? requestError.message : 'Unable to load operations data')); }, []);
+  return { tasks, users, error };
+}
 
 function OverviewPage() {
-	return (
-		<div className="page-shell">
-			<div className="page-header">
-				<div>
-					<span className="eyebrow">Admin overview</span>
-					<h1>Operations dashboard</h1>
-				</div>
-				<button className="primary-btn small">Export report</button>
-			</div>
-
-			<div className="metrics-grid">
-				{metrics.map((item) => (
-					<div className="metric-card" key={item.label}>
-						<small>{item.label}</small>
-						<strong>{item.value}</strong>
-						<span>{item.delta}</span>
-					</div>
-				))}
-			</div>
-
-			<div className="admin-grid">
-				<div className="admin-panel">
-					<div className="panel-header">
-						<h3>Campaign performance</h3>
-						<span className="badge success">+18.6%</span>
-					</div>
-					<div className="chart-box">
-						<div className="bar-group">
-							<span style={{ height: '25%' }} />
-							<span style={{ height: '42%' }} />
-							<span style={{ height: '61%' }} />
-							<span style={{ height: '73%' }} />
-							<span style={{ height: '88%' }} />
-							<span style={{ height: '96%' }} />
-						</div>
-					</div>
-				</div>
-
-				<div className="admin-panel">
-					<div className="panel-header">
-						<h3>Quick actions</h3>
-					</div>
-					<div className="quick-stack">
-						<button className="secondary-btn full-width">Create campaign</button>
-						<button className="secondary-btn full-width">Review payouts</button>
-						<button className="secondary-btn full-width">Flag suspicious users</button>
-					</div>
-				</div>
-			</div>
-		</div>
-	);
+  const { tasks, users, error } = useAdminData(); const volume = users.reduce((sum, user) => sum + user.balance, 0);
+  return <div className="page-shell"><div className="page-header"><div><span className="eyebrow">Live snapshot</span><h1>Operations dashboard</h1><p className="muted-copy">The pulse of your earning community, in one quiet room.</p></div><span className="live-indicator"><i /> System online</span></div>{error && <div className="form-error">{error}</div>}<div className="metrics-grid"><div className="metric-card"><small>Total members</small><strong>{users.length}</strong><span>Accounts in the network</span></div><div className="metric-card"><small>Wallet volume</small><strong>₹{volume.toLocaleString('en-IN')}</strong><span>Across member balances</span></div><div className="metric-card"><small>Live missions</small><strong>{tasks.filter((task) => task.status === 'LIVE').length}</strong><span>Currently discoverable</span></div><div className="metric-card"><small>Verified members</small><strong>{users.filter((user) => user.isVerified).length}</strong><span>Trust milestone</span></div></div><div className="admin-grid"><section className="admin-panel"><div className="panel-header"><div><span className="eyebrow">Activity</span><h2>Reward inventory</h2></div><NavLink to="/tasks" className="text-link">Manage tasks</NavLink></div><div className="chart-box"><div className="bar-group"><span style={{ height: '44%' }} /><span style={{ height: '60%' }} /><span style={{ height: '52%' }} /><span style={{ height: '78%' }} /><span style={{ height: '68%' }} /><span style={{ height: '88%' }} /></div></div></section><section className="admin-panel"><div className="panel-header"><div><span className="eyebrow">Attention</span><h2>Latest members</h2></div><NavLink to="/users" className="text-link">View users</NavLink></div><div className="quick-stack">{users.slice(0, 4).map((user) => <div className="member-row" key={user.id}><span className="mini-avatar">{user.name.charAt(0)}</span><div><strong>{user.name}</strong><small>{user.email}</small></div><span className={`status-pill ${user.isVerified ? 'verified' : 'pending'}`}>{user.isVerified ? 'Verified' : 'Review'}</span></div>)}</div></section></div></div>;
 }
 
 function TasksPage() {
-	return (
-		<div className="page-shell">
-			<div className="page-header">
-				<div>
-					<span className="eyebrow">Task management</span>
-					<h1>Reward tasks</h1>
-				</div>
-				<button className="primary-btn small">New task</button>
-			</div>
-
-			<div className="table-panel admin-panel">
-				<table>
-					<thead>
-						<tr>
-							<th>Title</th>
-							<th>Type</th>
-							<th>Reward</th>
-							<th>Status</th>
-							<th>Actions</th>
-						</tr>
-					</thead>
-					<tbody>
-						{tasks.map((task) => (
-							<tr key={task.title}>
-								<td>{task.title}</td>
-								<td>{task.type}</td>
-								<td>₹{task.reward}</td>
-								<td>
-									<span className="status-pill" data-state={task.status.toLowerCase()}>
-										{task.status}
-									</span>
-								</td>
-								<td>
-									<button className="mini-btn">Edit</button>
-								</td>
-							</tr>
-						))}
-					</tbody>
-				</table>
-			</div>
-		</div>
-	);
+  const [tasks, setTasks] = useState<AdminTask[]>([]); const [form, setForm] = useState({ title: '', description: '', reward: '100', link: '', imageUrl: '', status: 'LIVE' }); const [editing, setEditing] = useState<string | null>(null); const [error, setError] = useState(''); const [notice, setNotice] = useState('');
+  function loadTasks() { return apiRequest<{ tasks: AdminTask[] }>('/api/admin/tasks?limit=100').then((result) => setTasks(result.tasks)).catch((requestError) => setError(requestError instanceof Error ? requestError.message : 'Unable to load tasks')); }
+  useEffect(() => { void loadTasks(); }, []);
+  async function submit(event: FormEvent) { event.preventDefault(); setError(''); try { const path = editing ? `/api/admin/tasks/${editing}` : '/api/admin/tasks'; await apiRequest(path, { method: editing ? 'PUT' : 'POST', body: JSON.stringify({ ...form, reward: Number(form.reward), isDemo: false }) }); setForm({ title: '', description: '', reward: '100', link: '', imageUrl: '', status: 'LIVE' }); setEditing(null); setNotice(editing ? 'Mission updated.' : 'Mission created.'); await loadTasks(); } catch (requestError) { setError(requestError instanceof Error ? requestError.message : 'Unable to save mission'); } }
+  async function remove(task: AdminTask) { if (!window.confirm(`Delete ${task.title}?`)) return; try { await apiRequest(`/api/admin/tasks/${task.id}`, { method: 'DELETE' }); setNotice('Mission deleted.'); await loadTasks(); } catch (requestError) { setError(requestError instanceof Error ? requestError.message : 'Unable to delete mission'); } }
+  return <div className="page-shell"><div className="page-header"><div><span className="eyebrow">Task management</span><h1>Reward missions</h1></div></div>{notice && <div className="notice">{notice}</div>}{error && <div className="form-error">{error}</div>}<section className="admin-panel task-form-panel"><div className="panel-header"><div><h2>{editing ? 'Edit mission' : 'Create a mission'}</h2><p className="muted-copy">Give members a clear next action and a fair reward.</p></div>{editing && <button className="secondary-btn small" onClick={() => { setEditing(null); setForm({ title: '', description: '', reward: '100', link: '', imageUrl: '', status: 'LIVE' }); }}>Cancel</button>}</div><form className="task-form" onSubmit={submit}><label>Title<input required value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} /></label><label>Description<input required value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} /></label><label>Reward<input required min="1" type="number" value={form.reward} onChange={(event) => setForm({ ...form, reward: event.target.value })} /></label><label>Mission link<input type="url" value={form.link} onChange={(event) => setForm({ ...form, link: event.target.value })} placeholder="https://example.com" /></label><label>Image URL<input type="url" value={form.imageUrl} onChange={(event) => setForm({ ...form, imageUrl: event.target.value })} placeholder="https://.../banner.jpg" /></label><label>Status<select value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value })}><option value="LIVE">Live</option><option value="DEMO">Demo</option></select></label><button className="primary-btn">{editing ? 'Save changes' : 'Publish mission'}</button></form></section><section className="admin-panel table-panel"><div className="panel-header"><h2>All missions <span className="count-badge">{tasks.length}</span></h2></div><table><thead><tr><th>Mission</th><th>Reward</th><th>Status</th><th>Actions</th></tr></thead><tbody>{tasks.map((task) => <tr key={task.id}><td><strong>{task.title}</strong><small>{task.description}</small></td><td>₹{task.reward}</td><td><span className={`status-pill ${task.status === 'LIVE' ? 'live' : 'pending'}`}>{task.status}</span></td><td><button className="mini-btn" onClick={() => { setEditing(task.id); setForm({ title: task.title, description: task.description, reward: String(task.reward), link: task.link || '', imageUrl: task.imageUrl || '', status: task.status }); }}>Edit</button><button className="mini-btn danger" onClick={() => remove(task)}>Delete</button></td></tr>)}</tbody></table></section></div>;
 }
 
 function UsersPage() {
-	return (
-		<div className="page-shell">
-			<div className="page-header">
-				<div>
-					<span className="eyebrow">User management</span>
-					<h1>Community accounts</h1>
-				</div>
-			</div>
-
-			<div className="table-panel admin-panel">
-				<table>
-					<thead>
-						<tr>
-							<th>Name</th>
-							<th>Email</th>
-							<th>Role</th>
-							<th>Wallet</th>
-							<th>Status</th>
-						</tr>
-					</thead>
-					<tbody>
-						{users.map((user) => (
-							<tr key={user.email}>
-								<td>{user.name}</td>
-								<td>{user.email}</td>
-								<td>{user.role}</td>
-								<td>{user.wallet}</td>
-								<td>
-									<span
-										className="status-pill"
-										data-state={user.status === 'Verified' ? 'verified' : 'pending'}
-									>
-										{user.status}
-									</span>
-								</td>
-							</tr>
-						))}
-					</tbody>
-				</table>
-			</div>
-		</div>
-	);
+  const [users, setUsers] = useState<AdminUser[]>([]); const [query, setQuery] = useState(''); const [error, setError] = useState('');
+  function loadUsers() { return apiRequest<{ users: AdminUser[] }>('/api/user/users').then((result) => setUsers(result.users)).catch((requestError) => setError(requestError instanceof Error ? requestError.message : 'Unable to load users')); }
+  useEffect(() => { void loadUsers(); }, []);
+  async function verify(user: AdminUser) { try { await apiRequest(`/api/user/users/${user.id}/verify`, { method: 'PATCH', body: JSON.stringify({ isVerified: !user.isVerified }) }); await loadUsers(); } catch (requestError) { setError(requestError instanceof Error ? requestError.message : 'Unable to update user'); } }
+  async function setBan(user: AdminUser) { try { await apiRequest(`/api/user/users/${user.id}/ban`, { method: 'PATCH', body: JSON.stringify({ banned: !user.banned }) }); await loadUsers(); } catch (requestError) { setError(requestError instanceof Error ? requestError.message : 'Unable to update account access'); } }
+  const filtered = users.filter((user) => `${user.name} ${user.email}`.toLowerCase().includes(query.toLowerCase()));
+  return <div className="page-shell"><div className="page-header"><div><span className="eyebrow">User management</span><h1>Community accounts</h1></div><input className="search-input" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search members" /></div>{error && <div className="form-error">{error}</div>}<section className="admin-panel table-panel"><table><thead><tr><th>Member</th><th>Role</th><th>Balance</th><th>Joined</th><th>Verification</th><th>Access</th><th>Actions</th></tr></thead><tbody>{filtered.map((user) => <tr key={user.id}><td><div className="member-row"><span className="mini-avatar">{user.name.charAt(0)}</span><div><strong>{user.name}</strong><small>{user.email}</small></div></div></td><td>{user.role}</td><td>₹{user.balance.toLocaleString('en-IN')}</td><td>{new Date(user.createdAt).toLocaleDateString()}</td><td><span className={`status-pill ${user.isVerified ? 'verified' : 'pending'}`}>{user.isVerified ? 'Verified' : 'Pending'}</span></td><td><span className={`status-pill ${user.banned ? 'pending' : 'verified'}`}>{user.banned ? 'Suspended' : 'Active'}</span></td><td><button className="mini-btn" onClick={() => verify(user)}>{user.isVerified ? 'Unverify' : 'Verify'}</button><button className="mini-btn danger" onClick={() => setBan(user)}>{user.banned ? 'Restore' : 'Suspend'}</button></td></tr>)}</tbody></table>{filtered.length === 0 && <div className="empty-state">No members match this search.</div>}</section></div>;
 }
 
 function PayoutsPage() {
-	return (
-		<div className="page-shell">
-			<div className="page-header">
-				<div>
-					<span className="eyebrow">Withdrawals</span>
-					<h1>Payout review</h1>
-				</div>
-			</div>
+  const [requests, setRequests] = useState<Array<{ id: string; amount: number; status: string; userId: string }>>([]);
+  const [notice, setNotice] = useState('');
+  const [error, setError] = useState('');
+  async function loadRequests() { try { const result = await apiRequest<{ data?: Array<{ id: string; amount: number; status: string; userId: string }>; items?: Array<{ id: string; amount: number; status: string; userId: string }> }>('/api/admin/payment-requests'); setRequests(result.data || result.items || []); } catch (requestError) { setError(requestError instanceof Error ? requestError.message : 'Unable to load payouts'); } }
+  useEffect(() => { void loadRequests(); }, []);
+  async function decide(id: string, decision: 'APPROVED' | 'REJECTED') { try { await apiRequest(`/api/admin/payment-requests/${id}`, { method: 'PATCH', body: JSON.stringify({ decision }) }); setNotice(`Payout ${decision.toLowerCase()}.`); await loadRequests(); } catch (requestError) { setError(requestError instanceof Error ? requestError.message : 'Unable to update payout'); } }
+  return <div className="page-shell"><div className="page-header"><div><span className="eyebrow">Finance queue</span><h1>Payout requests</h1><p className="muted-copy">Review requests before funds leave the platform.</p></div><button className="secondary-btn small" onClick={() => void loadRequests()}>Refresh queue</button></div>{notice && <div className="notice">{notice}</div>}{error && <div className="form-error">{error}</div>}<section className="admin-panel table-panel"><table><thead><tr><th>Request</th><th>Member</th><th>Amount</th><th>Status</th><th>Decision</th></tr></thead><tbody>{requests.map((request) => <tr key={request.id}><td><strong>{request.id}</strong></td><td>{request.userId}</td><td>₹{request.amount.toLocaleString('en-IN')}</td><td><span className="status-pill pending">{request.status}</span></td><td><button className="mini-btn" onClick={() => void decide(request.id, 'APPROVED')}>Approve</button><button className="mini-btn danger" onClick={() => void decide(request.id, 'REJECTED')}>Reject</button></td></tr>)}</tbody></table>{requests.length === 0 && <div className="empty-state">No payout requests are waiting for review.</div>}</section></div>;
+}
 
-			<div className="table-panel admin-panel">
-				<table>
-					<thead>
-						<tr>
-							<th>User</th>
-							<th>Amount</th>
-							<th>Method</th>
-							<th>Status</th>
-							<th>Action</th>
-						</tr>
-					</thead>
-					<tbody>
-						{payouts.map((item) => (
-							<tr key={item.user}>
-								<td>{item.user}</td>
-								<td>{item.amount}</td>
-								<td>{item.method}</td>
-								<td>
-									<span className="status-pill" data-state={item.status.toLowerCase()}>
-										{item.status}
-									</span>
-								</td>
-								<td>
-									<button className="mini-btn">Review</button>
-								</td>
-							</tr>
-						))}
-					</tbody>
-				</table>
-			</div>
-		</div>
-	);
+function AuditPage() {
+  const [logs, setLogs] = useState<Array<{ id: string; action: string; entityType: string; entityId: string; createdAt: string }>>([]);
+  const [error, setError] = useState('');
+  useEffect(() => { apiRequest<{ logs: typeof logs }>('/api/user/audit').then((result) => setLogs(result.logs)).catch((requestError) => setError(requestError instanceof Error ? requestError.message : 'Unable to load audit activity')); }, []);
+  return <div className="page-shell"><div className="page-header"><div><span className="eyebrow">Security trail</span><h1>Audit activity</h1><p className="muted-copy">A read-only record of sensitive platform actions.</p></div></div>{error && <div className="form-error">{error}</div>}<section className="admin-panel table-panel"><table><thead><tr><th>Action</th><th>Entity</th><th>Reference</th><th>Time</th></tr></thead><tbody>{logs.map((log) => <tr key={log.id}><td><span className="status-pill live">{log.action}</span></td><td>{log.entityType}</td><td>{log.entityId}</td><td>{new Date(log.createdAt).toLocaleString()}</td></tr>)}</tbody></table>{logs.length === 0 && <div className="empty-state">No audit events recorded yet.</div>}</section></div>;
+}
+
+function CachePage() {
+  const [busy, setBusy] = useState(false); const [notice, setNotice] = useState(''); const [error, setError] = useState('');
+  async function clearCache() { setBusy(true); setError(''); setNotice(''); try { const result = await apiRequest<{ data?: { message: string; invalidated: number }; message?: string }>('/api/admin/cache/clear', { method: 'POST' }); setNotice(result.data?.message || result.message || 'Cache cleared successfully.'); } catch (requestError) { setError(requestError instanceof Error ? requestError.message : 'Unable to clear cache'); } finally { setBusy(false); } }
+  return <div className="page-shell"><div className="page-header"><div><span className="eyebrow">Maintenance</span><h1>Cache control</h1><p className="muted-copy">Invalidate reward cache entries after changing task or payout data.</p></div></div>{notice && <div className="notice">{notice}</div>}{error && <div className="form-error">{error}</div>}<section className="admin-panel maintenance-panel"><div className="maintenance-icon">↻</div><div><h2>Refresh platform data</h2><p className="muted-copy">This action is safe to repeat and records an audit event for the active administrator.</p><button className="primary-btn" disabled={busy} onClick={() => void clearCache()}>{busy ? 'Clearing...' : 'Clear reward cache'}</button></div></section></div>;
 }
 
 function AdminLayout() {
-	return (
-		<div className="admin-shell">
-			<aside className="sidebar">
-				<div className="brand-wrap admin-brand">
-					<div className="brand-mark">R</div>
-					<span>Reward Admin</span>
-				</div>
-
-				<nav className="sidebar-nav">
-					<NavLink to="/">Overview</NavLink>
-					<NavLink to="/tasks">Tasks</NavLink>
-					<NavLink to="/users">Users</NavLink>
-					<NavLink to="/payouts">Payouts</NavLink>
-				</nav>
-			</aside>
-
-			<main className="admin-main">
-				<header className="topbar admin-topbar">
-					<div className="topbar-title">
-						<span className="eyebrow">Control center</span>
-						<h2>Operations hub</h2>
-					</div>
-					<button className="primary-btn small">New campaign</button>
-				</header>
-
-				<Routes>
-					<Route path="/" element={<OverviewPage />} />
-					<Route path="/tasks" element={<TasksPage />} />
-					<Route path="/users" element={<UsersPage />} />
-					<Route path="/payouts" element={<PayoutsPage />} />
-				</Routes>
-			</main>
-		</div>
-	);
+  const navigate = useNavigate(); const [session, setSession] = useState(getSession());
+  function signOut() { clearSession(); setSession(null); navigate('/login'); }
+  if (!session || session.role !== 'ADMIN') return <Navigate to="/login" replace />;
+  return <div className="admin-shell"><aside className="sidebar"><div className="brand-wrap admin-brand"><div className="brand-mark">R</div><span>Reward Admin</span></div><div className="sidebar-label">Workspace</div><nav className="sidebar-nav"><NavLink to="/">Overview</NavLink><NavLink to="/tasks">Tasks</NavLink><NavLink to="/users">Users</NavLink><NavLink to="/payouts">Payouts</NavLink><NavLink to="/audit">Audit log</NavLink><NavLink to="/cache">Cache control</NavLink></nav><div className="sidebar-footer"><span>Signed in as</span><strong>{session.email}</strong><button onClick={signOut}>Sign out</button></div></aside><main className="admin-main"><header className="topbar admin-topbar"><div className="topbar-title"><span className="eyebrow">Control center</span><h2>Operations hub</h2></div><span className="live-indicator"><i /> Connected</span></header><Routes><Route path="/" element={<OverviewPage />} /><Route path="/tasks" element={<TasksPage />} /><Route path="/users" element={<UsersPage />} /><Route path="/payouts" element={<PayoutsPage />} /><Route path="/audit" element={<AuditPage />} /><Route path="/cache" element={<CachePage />} /><Route path="*" element={<Navigate to="/" replace />} /></Routes></main></div>;
 }
 
-export default function App() {
-	return (
-		<BrowserRouter>
-			<AdminLayout />
-		</BrowserRouter>
-	);
-}
+export default function App() { return <ErrorBoundary><BrowserRouter><Routes><Route path="/login" element={<LoginPage />} /><Route path="*" element={<AdminLayout />} /></Routes></BrowserRouter></ErrorBoundary>; }

@@ -4,7 +4,7 @@
 
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { prisma } from '../../db';
+import { getPrismaClient } from '../../db';
 import { ValidationError } from '../utils/ValidationError';
 
 /**
@@ -37,7 +37,7 @@ export const registerUser = async (
   }
 
   // Check if user already exists
-  const existingUser = await prisma.user.findUnique({
+  const existingUser = await getPrismaClient().user.findUnique({
     where: { emailNormalized: email.toLowerCase().trim() }
   });
 
@@ -50,7 +50,7 @@ export const registerUser = async (
   const passwordHash = await bcrypt.hash(password, saltRounds);
 
   // Create user and wallet
-  const user = await prisma.user.create({
+  const user = await getPrismaClient().user.create({
     data: {
       email: email.toLowerCase().trim(),
       emailNormalized: email.toLowerCase().trim(),
@@ -62,7 +62,7 @@ export const registerUser = async (
   });
 
   // Create wallet for the user
-  await prisma.wallet.create({
+  await getPrismaClient().wallet.create({
     data: {
       userId: user.id
     }
@@ -70,7 +70,7 @@ export const registerUser = async (
 
   // Generate tokens
   const token = jwt.sign(
-    { userId: user.id, email: user.email },
+    { sub: user.id, email: user.email },
     process.env.JWT_SECRET || 'secret',
     { expiresIn: '15m' }
   );
@@ -104,7 +104,7 @@ export const loginUser = async (
   refreshToken: string;
 }> => {
   // Find user
-  const user = await prisma.user.findUnique({
+  const user = await getPrismaClient().user.findUnique({
     where: { emailNormalized: email.toLowerCase().trim() },
     select: {
       id: true,
@@ -130,7 +130,7 @@ export const loginUser = async (
 
   // Generate tokens
   const token = jwt.sign(
-    { userId: user.id, email: user.email },
+    { sub: user.id, email: user.email },
     process.env.JWT_SECRET || 'secret',
     { expiresIn: '15m' }
   );
