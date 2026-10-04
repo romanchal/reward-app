@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>romanchal/reward-app · Repository Status Book</title>
+<style>
+  @page { size: A4; margin: 22mm 18mm; }
+  :root {
+    --ink: #111; --soft: #555; --muted: #8a8a8a;
+    --rule: #e5e5e5; --accent: #16a34a; --warn: #d97706; --danger: #b91c1c;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+  *{box-sizing:border-box}html,body{margin:0;padding:0}
+  body{font-family:Georgia,"Iowan Old Style","Palatino Linotype",serif;font-size:11.5pt;line-height:1.6;color:var(--ink);background:#fdfdfc}
+  .page{max-width:720px;margin:0 auto;padding:48px 32px 72px}
+  .cover{min-height:90vh;display:flex;flex-direction:column;justify-content:space-between;padding-top:20vh;padding-bottom:10vh;page-break-after:always}
+  .cover-title{font-family:"Helvetica Neue",Inter,system-ui,sans-serif;font-weight:300;font-size:40pt;letter-spacing:-0.02em;line-height:1.05;margin-bottom:24px}
+  .cover-sub{font-family:"Helvetica Neue",Inter,system-ui,sans-serif;font-size:13pt;color:var(--soft);letter-spacing:0.02em}
+  .cover-foot{display:flex;justify-content:space-between;font-family:"Helvetica Neue",Inter,system-ui,sans-serif;font-size:10pt;color:var(--muted);border-top:1px solid var(--rule);padding-top:12px}
+  h1,h2,h3,h4{font-family:"Helvetica Neue",Inter,system-ui,sans-serif;letter-spacing:-0.01em;color:var(--ink)}
+  h1{font-size:24pt;font-weight:500;margin:48px 0 8px;padding-top:12px;border-top:2px solid var(--ink);page-break-before:always}
+  h1:first-of-type{page-break-before:avoid}
+  h2{font-size:15pt;font-weight:600;margin:32px 0 8px}
+  h3{font-size:11.5pt;font-weight:600;margin:20px 0 6px;color:var(--soft);text-transform:uppercase;letter-spacing:0.08em}
+  p{margin:0 0 12px}
+  .lead{font-size:12.5pt;line-height:1.65;color:var(--soft);margin:8px 0 24px}
+  ul,ol{padding-left:20px;margin:0 0 16px}li{margin:4px 0}
+  code,kbd,pre{font-family:var(--mono);font-size:10.5pt}
+  code{background:#f3f3f1;padding:1px 5px;border-radius:3px}
+  pre{background:#0f172a;color:#e2e8f0;padding:14px 16px;border-radius:6px;overflow-x:auto;line-height:1.5;font-size:10pt;margin:10px 0 18px}
+  pre code{background:transparent;padding:0;color:inherit}
+  .callout{border-left:3px solid var(--accent);background:#f4faf6;padding:10px 14px;margin:14px 0 18px;font-size:10.5pt}
+  .warn{border-left:3px solid var(--warn);background:#fef9ed}
+  .danger{border-left:3px solid var(--danger);background:#fdf3f3}
+  .meter{display:flex;align-items:center;gap:12px;margin:8px 0 24px;font-family:"Helvetica Neue",Inter,system-ui,sans-serif;font-size:10.5pt;color:var(--soft)}
+  .meter-bar{flex:1;height:10px;background:#eee;border-radius:999px;overflow:hidden}
+  .meter-fill{height:100%;background:var(--accent)}
+  table{width:100%;border-collapse:collapse;margin:12px 0 24px;font-family:"Helvetica Neue",Inter,system-ui,sans-serif;font-size:10.5pt}
+  th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--rule);vertical-align:top}
+  th{color:var(--muted);font-weight:500;text-transform:uppercase;font-size:9pt;letter-spacing:0.05em}
+  .status-done{color:var(--accent);font-weight:600}
+  .status-partial{color:var(--warn);font-weight:600}
+  .status-todo{color:var(--danger);font-weight:600}
+  .status-manual{color:#6b7280;font-weight:600}
+  .checklist li{list-style:none;padding-left:22px;position:relative;margin:5px 0;font-family:"Helvetica Neue",Inter,system-ui,sans-serif;font-size:10.5pt}
+  .checklist li::before{content:"";position:absolute;left:0;top:4px;width:14px;height:14px;border:1.5px solid var(--ink);border-radius:3px}
+  .foot{margin-top:48px;padding-top:16px;border-top:1px solid var(--rule);color:var(--muted);font-size:9.5pt;font-family:"Helvetica Neue",Inter,system-ui,sans-serif}
+  .noprint{font-family:"Helvetica Neue",Inter,system-ui,sans-serif}
+  @media print{body{background:#fff}.noprint{display:none}a{color:var(--ink);text-decoration:none}}
+  .print-hint{position:sticky;top:0;background:#0f172a;color:#fff;padding:10px 16px;text-align:center;font-size:10.5pt;z-index:10}
+  .print-hint button{margin-left:10px;padding:4px 12px;background:var(--accent);color:#062611;border:0;border-radius:4px;cursor:pointer;font-weight:600}
+</style>
+</head>
+<body>
+
+<div class="print-hint noprint">
+  Press <kbd>Ctrl</kbd>+<kbd>P</kbd> (or <kbd>⌘</kbd>+<kbd>P</kbd>) → <strong>Save as PDF</strong>.
+  <button onclick="window.print()">Print now</button>
+</div>
+
+<div class="page">
+
+<section class="cover">
+  <div>
+    <div class="cover-sub">Repository Status Book</div>
+    <h1 class="cover-title" style="border:0;padding:0;margin-top:8px;">romanchal /<br/>reward-app.</h1>
+    <p class="lead">What's built, what's left, what only you can do.</p>
+  </div>
+  <div class="cover-foot">
+    <span>Snapshot · Oct 2026 · commit bbc966e</span>
+    <span>github.com/romanchal/reward-app</span>
+  </div>
+</section>
+
+<section>
+  <h1 style="border:0;padding:0;page-break-before:avoid;">At a glance</h1>
+  <p class="lead">The code is a working rewards platform in demo mode. Live-service bits (keys, DNS, backups) are still your job.</p>
+
+  <h3>Where we stand</h3>
+  <div class="meter"><span>Core app code</span><div class="meter-bar"><div class="meter-fill" style="width:100%"></div></div><span>100%</span></div>
+  <div class="meter"><span>Nice-to-haves (reset flow, 2FA, KYC, games, social sign-in)</span><div class="meter-bar"><div class="meter-fill" style="width:30%;background:var(--warn)"></div></div><span>~30%</span></div>
+  <div class="meter"><span>Live-service setup (keys, TLS, backups)</span><div class="meter-bar"><div class="meter-fill" style="width:20%;background:var(--warn)"></div></div><span>~20%</span></div>
+
+  <div class="callout">You can demo today with <code>docker compose up --build</code>. For real money you still need to do the human setup list on the last pages.</div>
+</section>
+
+<section>
+  <h1>1. What is built (every module)</h1>
+  <p class="lead">Everything shipped. Routes mounted. Admin UI for admin-side flows.</p>
+
+  <h2>Backend modules (<code>backend/src/modules/</code>)</h2>
+  <table>
+    <tr><th>Module</th><th>What it does</th><th>Status</th></tr>
+    <tr><td>auth</td><td>Register, login, refresh (cookie), logout, /me (full user hydration), audit logs for login/register</td><td class="status-done">Done</td></tr>
+    <tr><td>wallet</td><td>Transactional ledger, atomic balance update, immutable transaction history, /wallet, /wallet/transactions</td><td class="status-done">Done</td></tr>
+    <tr><td>tasks</td><td>List tasks, complete with idempotency key, award reward + XP, admin create/update/disable</td><td class="status-done">Done</td></tr>
+    <tr><td>missions</td><td>Daily mission list with progress tracking + ledger payout on completion</td><td class="status-done">Done</td></tr>
+    <tr><td>dailyRewards</td><td>One-per-day claim with 7-day streak tracking</td><td class="status-done">Done</td></tr>
+    <tr><td>streak</td><td>Streak snapshot endpoint for the dashboard</td><td class="status-done">Done</td></tr>
+    <tr><td>referrals</td><td>List, apply referral code, referrer bonus credited atomically</td><td class="status-done">Done</td></tr>
+    <tr><td>rewards</td><td>Catalogue + order flow with wallet debit, order history</td><td class="status-done">Done</td></tr>
+    <tr><td>withdrawals</td><td>Create (encrypted recipient, MIN/MAX/daily limits), state machine, Razorpay auto-call on approve, webhook, bulk-approve</td><td class="status-done">Done</td></tr>
+    <tr><td>offers</td><td>Demo offer provider, pluggable provider registry, offer list, sync endpoint</td><td class="status-done">Done</td></tr>
+    <tr><td>leaderboard</td><td>Top-N by XP + balance</td><td class="status-done">Done</td></tr>
+    <tr><td>manualPayments</td><td>Record offline (cash/bank/cheque/UPI), maker-checker approval, HTML receipt, CSV bulk import</td><td class="status-done">Done</td></tr>
+    <tr><td>admin</td><td>Dashboard metrics, user ban/restore, task CRUD, withdrawal transitions, fraud review, settings KV</td><td class="status-done">Done</td></tr>
+    <tr><td>fraud</td><td>Event list + review decision (CLEAN/SUSPICIOUS/BANNED)</td><td class="status-done">Done</td></tr>
+    <tr><td>webhooks</td><td>Razorpay HMAC-verified webhook → applies state transition</td><td class="status-done">Done</td></tr>
+  </table>
+
+  <h2>Database (<code>prisma/schema.prisma</code>, 5 migrations)</h2>
+  <table>
+    <tr><th>Migration</th><th>What it adds</th></tr>
+    <tr><td>20260910_init</td><td>User, Wallet, WalletTransaction, Task, TaskCompletion, Mission, MissionProgress, Streak, Level, Badge, Referral, Reward, RewardOrder, Withdrawal, Notification, SupportTicket, FraudEvent, RiskScore, AdminUser, AuditLog, AppSetting, Campaign, Offer, OfferCallback, Leaderboard, LeaderboardEntry, RefreshToken, Session, UserBadge (29 tables)</td></tr>
+    <tr><td>20261004_reward_games</td><td>GameType enum + GamePlay table (SCRATCH / WHEEL games)</td></tr>
+    <tr><td>20261004_social_accounts</td><td>SocialAccount table (Google / Phone / etc. mapping)</td></tr>
+    <tr><td>20261004_withdrawal_provider_ref</td><td>Withdrawal.providerRef + providerPayload (Razorpay)</td></tr>
+    <tr><td>20261004_manual_payments</td><td>ManualPayment + enums + 3 new AuditAction values</td></tr>
+  </table>
+
+  <h2>User web app (<code>web/</code>)</h2>
+  <ul>
+    <li>Pages: Home, Earn, Rewards, Leaderboard, Profile, Login, Register, NotFound</li>
+    <li>Mobile-first dark theme, safe-area insets, offline banner, skip-link, 404 page</li>
+    <li>Auth: memory-only access token, cookie-based refresh, auto-retry on 401, session restoration on load</li>
+    <li>ErrorBoundary + Sentry hook, Toast system, format helpers</li>
+    <li>Vite prod build: no sourcemaps, console/debugger stripped, hash-only filenames</li>
+    <li>nginx: CSP, X-Frame-Options DENY, no-referrer, gzip, /healthz, deny .env/.git paths</li>
+  </ul>
+
+  <h2>Admin console (<code>admin/</code>)</h2>
+  <ul>
+    <li>Pages: Login, Dashboard, Users, Tasks, Withdrawals, Manual Payments, Fraud, Settings</li>
+    <li>Admin-role gated login, cookie refresh parity with web</li>
+    <li>Full CRUD on tasks + ban/restore + withdrawal state transitions + fraud review + settings KV</li>
+    <li>Manual payment maker-checker UI + CSV import textarea + receipt opens in blob URL</li>
+    <li>ErrorBoundary + Sentry hook</li>
+  </ul>
+
+  <h2>Infrastructure</h2>
+  <ul>
+    <li>Docker Compose: postgres + backend + web + admin, all with healthchecks, <code>restart: unless-stopped</code></li>
+    <li><code>docker-compose.prod.yml</code> overlay requires secrets via <code>${VAR:?}</code>, binds SPA ports to 127.0.0.1 for TLS reverse proxy</li>
+    <li>Multi-stage Dockerfiles, auto <code>prisma migrate deploy</code> on backend boot</li>
+    <li>GitHub Actions CI: typecheck, build, <code>npm audit</code>, buildx-build all three images</li>
+    <li><code>scripts/gen-secrets.sh</code>: one-shot generator for JWT + encryption + DB password</li>
+    <li>Postman collection + environment at <code>postman/</code></li>
+    <li>Docs: README, DEPLOY, SECURITY, OPERATOR, SETUP_ON_YOUR_PC, BOOK, REPO_BOOK (this file)</li>
+  </ul>
+</section>
+
+<section>
+  <h1>2. What is pending (code work left)</h1>
+  <p class="lead">Features the schema allows but no code wires up yet, plus small nice-to-haves.</p>
+
+  <h2>Flagged in schema, not implemented in routes</h2>
+  <table>
+    <tr><th>Area</th><th>What's missing</th><th>Est.</th></tr>
+    <tr><td>Scratch / Wheel games</td><td>GamePlay table exists. No routes, no admin UI, no game logic. Pick odds, cap daily plays, debit/credit ledger.</td><td class="status-todo">1-2 days</td></tr>
+    <tr><td>Social sign-in</td><td>SocialAccount table exists. No OAuth flow (Google / Phone OTP). <code>passport-google-oauth20</code> or Firebase Auth hand-off.</td><td class="status-todo">1 day</td></tr>
+    <tr><td>Notifications</td><td>Notification table exists. No write path, no delivery (email / push), no list endpoint for the user.</td><td class="status-todo">1 day</td></tr>
+    <tr><td>Support tickets</td><td>SupportTicket table exists. No endpoints or admin UI.</td><td class="status-todo">0.5 day</td></tr>
+    <tr><td>Campaigns</td><td>Campaign table exists. No scheduler, no admin UI.</td><td class="status-todo">0.5 day</td></tr>
+    <tr><td>Levels / Badges</td><td>Level + Badge + UserBadge tables exist and are seeded. No award logic (grant badge on XP threshold).</td><td class="status-todo">0.5 day</td></tr>
+  </table>
+
+  <h2>Hardening nice-to-haves</h2>
+  <table>
+    <tr><th>Area</th><th>Status</th><th>Fix</th></tr>
+    <tr><td>Password reset flow</td><td class="status-todo">Missing</td><td>Email token endpoint + reset page. <strong>Add before shipping.</strong></td></tr>
+    <tr><td>Two-factor auth (TOTP)</td><td class="status-todo">Missing</td><td>Required for admin before public exposure.</td></tr>
+    <tr><td>KYC</td><td class="status-todo">Missing</td><td>Depends on market and payout size. Needs legal input.</td></tr>
+    <tr><td>Password change endpoint</td><td class="status-todo">Missing</td><td>POST /api/auth/password with old+new.</td></tr>
+    <tr><td>File upload for proof</td><td class="status-partial">URL only</td><td>Add S3/R2 pre-signed upload, store URL.</td></tr>
+    <tr><td>Server-side PDF receipt</td><td class="status-partial">HTML + print</td><td>Not needed unless emailing receipts.</td></tr>
+    <tr><td>Audit log viewer in admin</td><td class="status-todo">Missing</td><td>Table exists, written to, but no UI yet.</td></tr>
+    <tr><td>Rate limits in Redis</td><td class="status-partial">In-memory</td><td>Breaks under multi-instance. Swap to Redis when scaling.</td></tr>
+    <tr><td>Automated tests</td><td class="status-partial">Scaffolded</td><td><code>test/api.test.ts</code> is a template. Expand before shipping.</td></tr>
+    <tr><td>Logs → structured JSON</td><td class="status-partial">console</td><td>Pino + log shipper when you have a log destination.</td></tr>
+  </table>
+
+  <div class="callout">
+    <strong>Ponytail rule:</strong> none of the "nice-to-haves" are blockers for a demo launch. They become blockers one by one as the user base grows. Add when the first user complains, not before.
+  </div>
+</section>
+
+<section>
+  <h1>3. What only you can do</h1>
+  <p class="lead">Code is text — accounts, keys, domains, approvals need a human. These unlock the live service.</p>
+
+  <h2>Required before taking real money</h2>
+  <table>
+    <tr><th>Task</th><th>Where</th><th>Time</th><th>Status</th></tr>
+    <tr><td>Create Sentry projects, paste 2 DSNs into .env</td><td>sentry.io → <code>.env.prod</code></td><td>15 min</td><td class="status-manual">You</td></tr>
+    <tr><td>Create Razorpay account + activate RazorpayX Payouts</td><td>razorpay.com</td><td>45 min + 1-3 business days KYC</td><td class="status-manual">You</td></tr>
+    <tr><td>Create Razorpay API key + webhook, paste 4 values into .env</td><td>razorpay dashboard</td><td>20 min</td><td class="status-manual">You</td></tr>
+    <tr><td>Run gen-secrets.sh for JWT / refresh / encryption keys</td><td>server shell</td><td>5 min</td><td class="status-manual">You</td></tr>
+    <tr><td>Buy a domain</td><td>any registrar</td><td>10 min</td><td class="status-manual">You</td></tr>
+    <tr><td>Point DNS A records at your server</td><td>registrar DNS</td><td>5 min + up to 24 h propagation</td><td class="status-manual">You</td></tr>
+    <tr><td>Install Caddy + Caddyfile → TLS live</td><td>server shell</td><td>20 min</td><td class="status-manual">You</td></tr>
+    <tr><td>Rotate default admin password</td><td>DB shell</td><td>5 min</td><td class="status-manual">You</td></tr>
+    <tr><td>Create a second admin so maker-checker on manual payments works</td><td>admin UI</td><td>2 min</td><td class="status-manual">You</td></tr>
+    <tr><td>Daily DB backup cron + offsite copy</td><td>server crontab + S3/B2</td><td>30 min</td><td class="status-manual">You</td></tr>
+    <tr><td>UptimeRobot monitor on <code>/api/health</code></td><td>uptimerobot.com</td><td>10 min</td><td class="status-manual">You</td></tr>
+    <tr><td>Make GitHub repo private, review collaborators</td><td>github settings</td><td>5 min</td><td class="status-manual">You</td></tr>
+    <tr><td>Legal / compliance review (RBI, GST, ToS, Privacy)</td><td>lawyer</td><td>Days-weeks</td><td class="status-manual">You</td></tr>
+  </table>
+
+  <div class="warn">
+    <strong>Full details for every row above are in <code>OPERATOR.md</code> in the repo.</strong> This page is the summary — that file is the walkthrough.
+  </div>
+</section>
+
+<section>
+  <h1>4. Time estimate to go live</h1>
+  <p class="lead">If you only need the demo running: a weekend. For real money, Razorpay KYC is the long pole.</p>
+
+  <table>
+    <tr><th>Path</th><th>What it covers</th><th>Hands-on</th><th>Wall-clock</th></tr>
+    <tr><td>Demo-only</td><td>Install, generate secrets, boot the stack, show to someone</td><td>~1 hour</td><td>1 hour</td></tr>
+    <tr><td>Private beta with real money</td><td>+ Razorpay keys, TLS, DNS, admin hardening, backups, Sentry</td><td>~3-4 hours</td><td>1-3 days (Razorpay KYC)</td></tr>
+    <tr><td>Public launch</td><td>+ password reset, 2FA for admin, audit UI, basic monitoring alerts, legal</td><td>+ 3-5 days of code</td><td>~1-2 weeks + legal</td></tr>
+    <tr><td>Scale (10k+ users)</td><td>+ Redis rate limits, structured logs, read replicas, Game/Social features, more tests</td><td>+ 2-3 weeks</td><td>Rolling</td></tr>
+  </table>
+</section>
+
+<section>
+  <h1>5. Repo branches &amp; what's on them</h1>
+
+  <table>
+    <tr><th>Branch</th><th>Contents</th><th>Keep?</th></tr>
+    <tr><td><code>main</code></td><td>Working app. Current working tree. HEAD = <code>bbc966e</code>.</td><td class="status-done">Canonical</td></tr>
+    <tr><td><code>legacy-roman</code></td><td>Original 12k-line attempt. Fictional dep versions, does not build. Preserved for reference / salvage.</td><td class="status-manual">Reference only</td></tr>
+  </table>
+
+  <div class="callout">
+    If you ever want to resurrect features from <code>legacy-roman</code> (admin cache page, Redis layer, UserDashboard component, 3009-line CSS), copy specific files onto <code>main</code> and rewrite the dep versions to real ones (TypeScript 5, Vite 6, React 19, etc). Treat it as source material, not a parallel line.
+  </div>
+</section>
+
+<section>
+  <h1>6. Suggested order of operations</h1>
+  <p class="lead">If this is your first time, do them in this order. Each step gates the next.</p>
+
+  <ol>
+    <li><strong>Clone, boot in demo mode.</strong> <code>docker compose up --build</code>. Verify <code>/api/health</code> returns ok.</li>
+    <li><strong>Seed demo data.</strong> <code>docker compose exec backend node dist/scripts/seed.js</code>. Log in as <code>demo1@example.com</code> and <code>admin@example.com</code> (both <code>password123</code>).</li>
+    <li><strong>Rotate the admin password immediately.</strong> See OPERATOR §10.</li>
+    <li><strong>Create the second admin</strong> so maker-checker works for Manual Payments.</li>
+    <li><strong>Run through the smoke test:</strong> register a new user → earn a task → request a withdrawal → approve as admin → create a manual payment → approve as the other admin → open the receipt.</li>
+    <li><strong>Sign up for Sentry</strong>, paste both DSNs, rebuild. Trigger a test 500 and confirm it shows up in Sentry.</li>
+    <li><strong>Buy a domain + Caddy + DNS.</strong> HTTPS live.</li>
+    <li><strong>Switch to the prod compose overlay</strong> with real secrets.</li>
+    <li><strong>Razorpay setup</strong> (KYC in parallel). Test with <code>rzp_test_</code> keys first. Confirm a test payout flips a withdrawal to COMPLETED via the webhook.</li>
+    <li><strong>Backups + uptime monitor.</strong></li>
+    <li><strong>Switch to <code>rzp_live_</code> keys</strong> only after full test coverage.</li>
+    <li><strong>Add password reset + 2FA for admin</strong> before telling anyone the app is public.</li>
+  </ol>
+</section>
+
+<section>
+  <h1>Final checklist</h1>
+  <ul class="checklist">
+    <li>Server up, <code>docker compose ps</code> all healthy</li>
+    <li>Fresh JWT / refresh / encryption key in <code>.env.prod</code>, not dev defaults</li>
+    <li><code>.env.prod</code> NOT in git</li>
+    <li>Sentry DSNs set, test exception visible</li>
+    <li>Razorpay test keys set, test payout succeeded, webhook flipped a withdrawal</li>
+    <li>Domain purchased, DNS pointed, Caddy serves HTTPS (padlock)</li>
+    <li>Default admin password rotated</li>
+    <li>Second admin user exists</li>
+    <li>GitHub repo private</li>
+    <li>Daily DB backup cron added, one restore drill done</li>
+    <li>UptimeRobot pinging <code>/api/health</code></li>
+    <li>Password reset flow added before public launch</li>
+    <li>2FA on admin before public launch</li>
+    <li>Legal / compliance review signed off before live payouts</li>
+    <li>Switched to <code>rzp_live_</code> keys</li>
+  </ul>
+
+  <div class="foot">
+    <strong>romanchal / reward-app</strong> · Repository Status Book · snapshot at commit <code>bbc966e</code><br/>
+    Companion docs in the repo: <code>README.md</code>, <code>SETUP_ON_YOUR_PC.md</code>, <code>DEPLOY.md</code>, <code>SECURITY.md</code>, <code>OPERATOR.md</code>, <code>BOOK.html</code>.<br/>
+    Legacy work preserved on branch <code>legacy-roman</code>.
+  </div>
+</section>
+
+</div>
+</body>
+</html>
