@@ -5,7 +5,10 @@ import { App } from './App';
 import { AuthProvider } from './lib/auth';
 import { ToastProvider } from './components/Toast';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { initSentry } from './lib/sentry';
 import './styles.css';
+
+initSentry();
 
 createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

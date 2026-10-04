@@ -12,6 +12,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: unknown) {
     if (typeof console !== 'undefined') console.error('[ErrorBoundary]', error);
+    import('../lib/sentry').then(({ captureError }) => captureError(error)).catch(() => undefined);
   }
 
   reset = () => {

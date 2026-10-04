@@ -6,6 +6,7 @@ import { ZodError } from 'zod';
 import type { PrismaClient } from '@prisma/client';
 import { config } from './config';
 import { HttpError } from './lib/http-error';
+import { captureError } from './lib/sentry';
 import { rateLimit, authRateLimit, withdrawalRateLimit } from './middleware/rateLimit';
 import { authMiddleware, adminMiddleware } from './middleware/auth';
 import { authRoutes } from './modules/auth/authRoutes';
@@ -139,6 +140,7 @@ export function createApp(prisma: PrismaClient) {
     }
     const message = err instanceof Error ? err.message : 'Internal server error';
     console.error('[reward-app] error', { requestId: req.requestId, message, err });
+    captureError(err, { requestId: req.requestId, method: req.method, path: req.path, userId: req.user?.id });
     res.status(500).json({ error: message, requestId: req.requestId });
   });
 
