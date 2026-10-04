@@ -154,6 +154,11 @@ enum ManualPaymentStatus {
   REJECTED
 }
 
+enum GameType {
+  SCRATCH
+  WHEEL
+}
+
 model User {
   id                  String              @id @default(cuid())
   email               String              @unique
@@ -193,6 +198,8 @@ model User {
   auditLogs           AuditLog[]
   offerCallbacks      OfferCallback[]
   leaderboardEntries  LeaderboardEntry[]
+  gamePlays           GamePlay[]
+  socialAccounts      SocialAccount[]
 
   @@index([emailNormalized])
   @@index([deviceId])
@@ -579,6 +586,33 @@ model ManualPayment {
 
   @@index([userId, status, createdAt])
   @@index([status, createdAt])
+}
+
+model GamePlay {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  game         GameType
+  playDate     String   @db.VarChar(10)
+  playNumber   Int
+  rewardAmount Int
+  rewardLabel  String
+  createdAt    DateTime @default(now()) @db.Timestamptz(6)
+
+  @@unique([userId, game, playDate, playNumber])
+  @@index([userId, game, playDate])
+}
+
+model SocialAccount {
+  id             String   @id @default(cuid())
+  provider       String
+  providerUserId String
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt      DateTime @default(now()) @db.Timestamptz(6)
+
+  @@unique([provider, providerUserId])
+  @@index([userId])
 }
 
 model Campaign {
