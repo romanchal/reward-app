@@ -3,6 +3,7 @@ import type { ReactElement } from 'react';
 import { Layout } from './components/Layout';
 import { HomePage } from './pages/HomePage';
 import { EarnPage } from './pages/EarnPage';
+import { GamesPage } from './pages/GamesPage';
 import { RewardsPage } from './pages/RewardsPage';
 import { LeaderboardPage } from './pages/LeaderboardPage';
 import { ProfilePage } from './pages/ProfilePage';
@@ -33,6 +34,7 @@ export function App() {
         <Route element={<Protected><Layout /></Protected>}>
           <Route path="/" element={<HomePage />} />
           <Route path="/earn" element={<EarnPage />} />
+          <Route path="/games" element={<GamesPage />} />
           <Route path="/rewards" element={<RewardsPage />} />
           <Route path="/leaderboard" element={<LeaderboardPage />} />
           <Route path="/profile" element={<ProfilePage />} />

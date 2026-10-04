@@ -22,6 +22,7 @@ import { leaderboardRoutes } from './modules/leaderboard/leaderboardRoutes';
 import { adminRoutes } from './modules/admin/adminRoutes';
 import { streakRoutes } from './modules/streak/streakRoutes';
 import { razorpayWebhookRoutes } from './modules/webhooks/razorpayWebhook';
+import { gameRoutes } from './modules/games/gameRoutes';
 
 const PROTECTED_AUTH_PATHS = new Set(['/me']);
 
@@ -124,6 +125,7 @@ export function createApp(prisma: PrismaClient) {
   app.use('/api/offers', guard, offerRoutes(prisma));
   app.use('/api/leaderboard', guard, leaderboardRoutes(prisma));
   app.use('/api/streak', guard, streakRoutes(prisma));
+  app.use('/api/games', guard, gameRoutes(prisma));
 
   app.use('/api/webhooks', razorpayWebhookRoutes(prisma));
 

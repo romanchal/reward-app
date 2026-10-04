@@ -5,6 +5,7 @@ import { useAuth } from '../lib/auth';
 const tabs = [
   { to: '/', label: 'Home', icon: '⌂' },
   { to: '/earn', label: 'Earn', icon: '↗' },
+  { to: '/games', label: 'Games', icon: '◉' },
   { to: '/rewards', label: 'Rewards', icon: '✦' },
   { to: '/leaderboard', label: 'Board', icon: '♙' },
   { to: '/profile', label: 'Me', icon: '●' },

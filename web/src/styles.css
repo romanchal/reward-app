@@ -1905,3 +1905,27 @@ select {
 @media (prefers-reduced-motion: reduce) {
   .skip-link { transition: none; }
 }
+
+/* ===== Games ===== */
+.scratch-stage { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 8px 0; }
+.scratch-card { position: relative; width: 260px; height: 160px; border-radius: var(--radius, 14px); overflow: hidden; box-shadow: 0 10px 32px rgba(0,0,0,.24); }
+.scratch-reveal, .scratch-cover { position: absolute; inset: 0; display: grid; place-items: center; }
+.scratch-reveal { background: linear-gradient(145deg, #166534, #22c55e); color: #e7fff0; font-family: system-ui, sans-serif; }
+.scratch-reveal strong { display: block; font-size: 14px; opacity: .85; margin-bottom: 4px; }
+.scratch-reveal span { font-size: 32px; font-weight: 800; letter-spacing: -0.02em; }
+.scratch-cover { background: repeating-linear-gradient(45deg, #94a3b8, #94a3b8 10px, #cbd5e1 10px, #cbd5e1 20px); color: #0f172a; font-weight: 800; font-size: 18px; letter-spacing: 0.1em; transition: opacity 500ms ease, transform 500ms ease; }
+.scratch-card.is-revealed .scratch-cover { opacity: 0; transform: scale(1.05); pointer-events: none; }
+.scratch-card.is-win .scratch-reveal { background: linear-gradient(145deg, #22c55e, #fbbf24); color: #052012; }
+
+.wheel-stage { display: flex; flex-direction: column; align-items: center; gap: 18px; padding: 12px 0; }
+.wheel-pointer { width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 16px solid var(--accent, #22c55e); filter: drop-shadow(0 2px 4px rgba(0,0,0,.4)); z-index: 2; margin-bottom: -8px; }
+.wheel { position: relative; width: 260px; height: 260px; border-radius: 50%; background: conic-gradient(#334155 0 60deg, #475569 60deg 120deg, #22c55e 120deg 180deg, #16a34a 180deg 240deg, #fbbf24 240deg 300deg, #ef4444 300deg 360deg); box-shadow: 0 12px 40px rgba(0,0,0,.4), inset 0 0 0 8px rgba(255,255,255,.08); transition: transform 2200ms cubic-bezier(.17,.67,.15,1); }
+.wheel-slice { position: absolute; inset: 0; display: flex; justify-content: center; transform-origin: 50% 50%; }
+.wheel-slice span { display: inline-block; padding-top: 24px; font-family: system-ui, sans-serif; font-weight: 800; font-size: 13px; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.4); }
+.wheel-hub { position: absolute; top: 50%; left: 50%; width: 34px; height: 34px; margin: -17px 0 0 -17px; border-radius: 50%; background: #0f172a; box-shadow: 0 0 0 4px rgba(255,255,255,.15), inset 0 2px 6px rgba(0,0,0,.6); }
+.wheel-result { font-family: system-ui, sans-serif; font-size: 15px; color: var(--text, #fff); background: var(--surface-raised, #16243a); padding: 8px 14px; border-radius: 999px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .wheel { transition: none; }
+  .scratch-card .scratch-cover { transition: none; }
+}
