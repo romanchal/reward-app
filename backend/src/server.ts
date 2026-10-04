@@ -49,15 +49,37 @@ const allowedOrigins = (process.env.ALLOWED_ORIGINS ?? 'http://localhost:4175,ht
   .map((origin) => origin.trim())
   .filter(Boolean);
 
+function isLocalDevelopmentOrigin(origin: string) {
+  if (isProduction) return false;
+
+  try {
+    const url = new URL(origin);
+    const octets = url.hostname.split('.').map(Number);
+    const isPrivateIPv4 =
+      octets.length === 4 &&
+      octets.every((octet) => Number.isInteger(octet) && octet >= 0 && octet <= 255) &&
+      (octets[0] === 10 ||
+        (octets[0] === 172 && octets[1] >= 16 && octets[1] <= 31) ||
+        (octets[0] === 192 && octets[1] === 168));
+
+    return (
+      url.protocol === 'http:' &&
+      (['localhost', '127.0.0.1', '[::1]'].includes(url.hostname) || isPrivateIPv4)
+    );
+  } catch {
+    return false;
+  }
+}
+
 app.use(
   cors({
     origin(origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (!origin || allowedOrigins.includes(origin) || isLocalDevelopmentOrigin(origin)) {
         callback(null, true);
         return;
       }
 
-      callback(new Error('CORS origin not allowed'));
+      callback(new Error(`CORS origin not allowed: ${origin}`));
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],

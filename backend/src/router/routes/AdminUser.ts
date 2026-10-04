@@ -3,6 +3,7 @@
  */
 
 import { Router } from 'express';
+import bcrypt from 'bcryptjs';
 import { prisma } from '../../db';
 
 const router = Router();
@@ -10,6 +11,35 @@ const router = Router();
 router.use((req: any, res: any, next: any) => {
   if (req.user?.role !== 'ADMIN') return res.status(403).json({ error: 'Administrator access required' });
   next();
+});
+
+router.post('/password', async (req: any, res: any) => {
+  const { currentPassword, newPassword } = req.body ?? {};
+  if (typeof currentPassword !== 'string' || !currentPassword) {
+    return res.status(400).json({ error: 'Current password is required' });
+  }
+  if (typeof newPassword !== 'string' || newPassword.length < 8 || Buffer.byteLength(newPassword, 'utf8') > 72) {
+    return res.status(400).json({ error: 'New password must be 8 or more characters and no more than 72 bytes' });
+  }
+  if (currentPassword === newPassword) {
+    return res.status(400).json({ error: 'New password must be different from the current password' });
+  }
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      select: { id: true, passwordHash: true },
+    });
+    if (!user || !(await bcrypt.compare(currentPassword, user.passwordHash))) {
+      return res.status(400).json({ error: 'Current password is incorrect' });
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, 12);
+    await prisma.user.update({ where: { id: user.id }, data: { passwordHash } });
+    return res.json({ success: true });
+  } catch {
+    return res.status(500).json({ error: 'Failed to update password' });
+  }
 });
 
 // Admin: Get users
@@ -53,7 +83,8 @@ router.get('/users/:id', async (req: any, res: any) => {
         banned: true
       }
     });
-    
+
+    if (!user) return res.status(404).json({ error: 'User not found' });
     res.json(user);
   } catch (error) {
     res.status(404).json({ error: 'User not found' });
@@ -64,9 +95,11 @@ router.get('/users/:id', async (req: any, res: any) => {
 router.patch('/users/:id/verify', async (req: any, res: any) => {
   try {
     const { isVerified } = req.body;
+    if (typeof isVerified !== 'boolean') return res.status(400).json({ error: 'isVerified must be a boolean' });
     const user = await prisma.user.update({
       where: { id: req.params.id },
-      data: { isVerified }
+      data: { isVerified },
+      select: { id: true, email: true, name: true, role: true, isVerified: true },
     });
     
     res.json({ success: true, user });
@@ -78,6 +111,10 @@ router.patch('/users/:id/verify', async (req: any, res: any) => {
 router.patch('/users/:id/ban', async (req: any, res: any) => {
   try {
     const banned = Boolean(req.body?.banned);
+    const target = await prisma.user.findUnique({ where: { id: req.params.id }, select: { id: true, role: true } });
+    if (!target) return res.status(404).json({ error: 'User not found' });
+    if (target.role === 'ADMIN') return res.status(400).json({ error: 'Administrator accounts cannot be suspended here' });
+
     const user = await prisma.user.update({
       where: { id: req.params.id },
       data: { banned },
@@ -116,8 +153,8 @@ router.get('/users/:id/referrals', async (req: any, res: any) => {
       where: { userId: req.params.id },
       select: {
         id: true,
-        user: true,
-        referredBy: true,
+        user: { select: { id: true, name: true, email: true } },
+        referredBy: { select: { id: true, name: true, email: true } },
         code: true,
         status: true,
         createdAt: true

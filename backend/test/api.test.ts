@@ -11,8 +11,10 @@ const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
 async function bootstrap() {
   const migration = await readFile(new URL('../prisma/migrations/20260910000000_init/migration.sql', import.meta.url), 'utf8');
+  const rewardsMigration = await readFile(new URL('../prisma/migrations/20261004000000_reward_games/migration.sql', import.meta.url), 'utf8');
   const { prisma, connection } = createTestPrisma();
-  connection.exec(migration);
+  await connection.exec(migration);
+  await connection.exec(rewardsMigration);
   const app = createApp(prisma);
   return { app, prisma, connection };
 }
@@ -66,6 +68,45 @@ test('daily reward and mission progress are server controlled', async () => {
   assert.equal(streak?.count, 1);
 });
 
+test('admin game config drives server-side rewards, wallet credits, and daily limits', async () => {
+  const { app, prisma } = await bootstrap();
+  const agent = request(app);
+  const adminRegistration = await agent.post('/api/auth/register').send({ email: 'games-admin@example.com', password: 'password123', name: 'Games Admin' }).expect(201);
+  await prisma.user.update({ where: { id: adminRegistration.body.data.userId }, data: { role: 'ADMIN' } });
+  const adminHeaders = { authorization: `Bearer ${adminRegistration.body.data.token}` };
+  const userRegistration = await agent.post('/api/auth/register').send({ email: 'games-user@example.com', password: 'password123', name: 'Games User' }).expect(201);
+  const userHeaders = { authorization: `Bearer ${userRegistration.body.data.token}` };
+  const config = {
+    scratchPrizes: [{ id: 'scratch-test', label: '12 credits', amount: 12, weight: 100 }],
+    wheelPrizes: [{ id: 'wheel-test', label: '7 credits', amount: 7, weight: 100 }],
+    banners: [{ id: 'home-test', title: 'Test banner', imageUrl: 'https://example.com/banner.png', targetUrl: 'https://example.com/offer', placement: 'HOME', enabled: true }],
+  };
+
+  await agent.put('/api/admin/rewards/config').set(adminHeaders).send(config).expect(200);
+  const publicConfig = await agent.get('/api/rewards/config').expect(200);
+  assert.equal(publicConfig.body.data.banners[0].id, 'home-test');
+  assert.equal(publicConfig.body.data.dailyLimit, 10);
+
+  for (let play = 0; play < 10; play += 1) {
+    const result = await agent.post('/api/rewards/games/scratch/play').set(userHeaders).send({}).expect(200);
+    assert.equal(result.body.data.reward.amount, 12);
+  }
+  await agent.post('/api/rewards/games/scratch/play').set(userHeaders).send({}).expect(429);
+  const wheel = await agent.post('/api/rewards/games/wheel/play').set(userHeaders).send({}).expect(200);
+  assert.equal(wheel.body.data.reward.amount, 7);
+
+  const wallet = await agent.get('/api/wallet').set(userHeaders).expect(200);
+  assert.equal(wallet.body.data.balance, 127);
+  const transactions = await agent.get('/api/wallet/transactions').set(userHeaders).expect(200);
+  assert.equal(transactions.body.data.length, 11);
+  assert.ok(transactions.body.data.every((transaction: { type: string }) => transaction.type === 'DAILY_REWARD'));
+
+  const state = await agent.get('/api/rewards/games/state').set(userHeaders).expect(200);
+  assert.equal(state.body.data.scratchPlays, 10);
+  assert.equal(state.body.data.spinPlays, 1);
+  assert.equal((await prisma.user.findUnique({ where: { email: 'games-user@example.com' } }))?.balance, 127);
+});
+
 test('withdrawal requires verification and admin approval', async () => {
   const { app, prisma } = await bootstrap();
   const agent = request(app);
@@ -94,3 +135,4 @@ test('admin routes reject ordinary users', async () => {
   const registration = await agent.post('/api/auth/register').send({ email: 'plain@example.com', password: 'password123', name: 'Plain User' }).expect(201);
   await agent.get('/api/admin/dashboard').set({ authorization: `Bearer ${registration.body.accessToken}` }).expect(403);
 });
+

@@ -8,13 +8,22 @@ import { prisma } from '../../db';
 
 const router = Router();
 
+router.use((req: any, res: any, next: any) => {
+  if (req.user?.role !== 'ADMIN') return res.status(403).json({ error: 'Administrator access required' });
+  next();
+});
+
 // Admin: Get all tasks (includes live and demo)
 router.get('/tasks', async (req: any, res: any) => {
   try {
-    const limit = Number(req.query.limit) || 50;
-    const status = req.query.status as 'LIVE' | 'DEMO' | 'ALL';
+    const limit = Math.min(Math.max(Number(req.query.limit) || 50, 1), 200);
+    const status = String(req.query.status ?? 'ALL');
+    if (!['LIVE', 'DEMO', 'ALL'].includes(status)) {
+      return res.status(400).json({ error: 'Status must be LIVE, DEMO, or ALL' });
+    }
     
     const tasks = await prisma.task.findMany({
+      where: status === 'ALL' ? undefined : { status: status as 'LIVE' | 'DEMO' },
       orderBy: { id: 'desc' },
       take: limit,
       select: {

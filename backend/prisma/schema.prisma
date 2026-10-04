@@ -22,6 +22,12 @@ enum TaskStatus {
 enum TransactionType {
   TASK_REWARD
   REFERRAL_REWARD
+  DAILY_REWARD
+}
+
+enum GameType {
+  SCRATCH
+  WHEEL
 }
 
 enum TransactionStatus {
@@ -47,10 +53,12 @@ model User {
   referred            Referral[]     @relation("UserReferrals")
   streak              Streak?
   refreshTokens       RefreshToken[]
+  socialAccounts      SocialAccount[]
   userTasks      UserTask[]
   wallet          Wallet?
   walletTransactions WalletTransaction[]
   withdrawals      Withdrawal[]
+  gamePlays        GamePlay[]
 
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
@@ -177,6 +185,39 @@ model RefreshToken {
   revokedAt DateTime?
   expiresAt DateTime?
   createdAt DateTime @default(now())
+}
+
+model SocialAccount {
+  id             String   @id @default(cuid())
+  provider       String
+  providerUserId String
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt      DateTime @default(now())
+
+  @@unique([provider, providerUserId])
+  @@index([userId])
+}
+
+model AppSetting {
+  key       String   @id
+  value     Json     @db.Json
+  updatedAt DateTime @updatedAt @db.Timestamptz(6)
+}
+
+model GamePlay {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  game         GameType
+  playDate     String   @db.VarChar(10)
+  playNumber   Int
+  rewardAmount Int
+  rewardLabel  String
+  createdAt    DateTime @default(now()) @db.Timestamptz(6)
+
+  @@unique([userId, game, playDate, playNumber])
+  @@index([userId, game, playDate])
 }
 
 model AuditLog {

@@ -35,6 +35,8 @@ export function authMiddleware(prisma: any) {
       original === '/api' ||
       original === '/api/' ||
       original.startsWith('/api/auth') ||
+      (req.method === 'GET' && original.split('?')[0] === '/api/promos/yono-rummy') ||
+      (req.method === 'GET' && original.split('?')[0] === '/api/rewards/config') ||
       original === '/api/docs' ||
       original.startsWith('/api/docs?') ||
       original.startsWith('/api/health');

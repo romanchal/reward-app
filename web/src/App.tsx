@@ -1,6 +1,30 @@
-import { Component, type FormEvent, type ReactNode, useEffect, useState } from 'react';
+import { Component, type FormEvent, type ReactNode, useEffect, useRef, useState } from 'react';
 import { BrowserRouter, Link, NavLink, Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import { apiRequest, clearSession, formatCurrency, getSession, saveSession, type ApiTask, type Session, type Wallet } from './lib/api';
+import RewardsPage from './components/RewardsPage';
+
+type GoogleCredentialResponse = { credential?: string };
+type TelegramLoginData = { id: number; first_name: string; last_name?: string; username?: string; auth_date: number; hash: string };
+type LoginResponse = {
+  data?: { token?: string; userId?: string; role?: string; user?: { id: string; role: string; name: string; email?: string } };
+  accessToken?: string;
+  user?: { id: string; role: string; name: string; email?: string };
+};
+
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize: (options: { client_id: string; callback: (response: GoogleCredentialResponse) => void }) => void;
+          renderButton: (element: HTMLElement, options: { theme: 'outline'; size: 'large'; text: 'continue_with'; width: number }) => void;
+          cancel?: () => void;
+        };
+      };
+    };
+    onTelegramAuth?: (data: TelegramLoginData) => void;
+  }
+}
 
 class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
   state = { hasError: false };
@@ -27,58 +51,303 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
   }
 }
 
+async function copyTextToClipboard(value: string) {
+  try {
+    await navigator.clipboard.writeText(value);
+    return;
+  } catch {
+    const field = document.createElement('textarea');
+    field.value = value;
+    field.setAttribute('readonly', '');
+    field.style.position = 'fixed';
+    field.style.opacity = '0';
+    document.body.appendChild(field);
+    field.select();
+    const copied = document.execCommand('copy');
+    field.remove();
+    if (!copied) throw new Error('Clipboard access is unavailable');
+  }
+}
+
+type ManagedBanner = { id: string; title: string; imageUrl: string; targetUrl: string; placement: 'HOME' | 'REWARDS'; enabled: boolean };
+
 function HomePage() {
+  const session = getSession();
+  const [referralCode, setReferralCode] = useState('');
+  const [referralMessage, setReferralMessage] = useState('');
+  const [referralLoading, setReferralLoading] = useState(Boolean(session));
+  const [homeBanners, setHomeBanners] = useState<ManagedBanner[]>([]);
+
+  useEffect(() => {
+    if (!session) return;
+    let active = true;
+    apiRequest<{ data: { code: string } }>('/api/referrals')
+      .then((result) => { if (active) setReferralCode(result.data.code); })
+      .catch(() => { if (active) setReferralMessage('Referral code is currently unavailable.'); })
+      .finally(() => { if (active) setReferralLoading(false); });
+    return () => { active = false; };
+  }, [session?.userId]);
+
+  useEffect(() => {
+    let active = true;
+    apiRequest<{ data: { banners: ManagedBanner[] } }>('/api/rewards/config')
+      .then((result) => { if (active) setHomeBanners(result.data.banners.filter((banner) => banner.placement === 'HOME' && banner.enabled)); })
+      .catch(() => undefined);
+    return () => { active = false; };
+  }, []);
+
+  async function copyReferralCode() {
+    if (!referralCode) return;
+    try {
+      await copyTextToClipboard(referralCode);
+      setReferralMessage('Referral code copied.');
+    } catch {
+      setReferralMessage('Unable to copy the referral code.');
+    }
+  }
+
   return (
-    <div className="page-shell">
+    <div className="page-shell home-page">
       <section className="hero-panel">
         <div className="hero-copy">
           <span className="kicker">Earn more. Stay rewarded.</span>
-          <h1>Turn daily actions into meaningful rewards.</h1>
+          <h1>Make everyday actions count.</h1>
           <p>
-            Complete quick tasks, grow streaks, unlock referrals, and convert activity into wallet value.
+            Find missions, track your wallet, share your referral code, and explore rewards in one place.
           </p>
           <div className="cta-row">
-            <Link to={getSession() ? '/dashboard' : '/login'} className="primary-btn">Start earning</Link>
+            <Link to={session ? '/dashboard' : '/login'} className="primary-btn">{session ? 'Open dashboard' : 'Create account'}</Link>
             <Link to="/tasks" className="secondary-btn">Browse missions</Link>
           </div>
         </div>
         <div className="hero-card">
-          <div className="card-topline">Your progress</div>
-          <div className="circle-ring">
-            <div className="circle-inner">
-              <strong>72%</strong>
-              <span>Weekly goal</span>
+          <div className="card-topline">{session ? 'Your account IDs' : 'Your member hub'}</div>
+          {session ? (
+            <div className="home-id-list">
+              <div className="home-id-row"><span>Member ID</span><code>{session.userId}</code></div>
+              <div className="home-id-row">
+                <span>Referral ID</span>
+                {referralLoading ? <small>Loading...</small> : referralCode ? <code>{referralCode}</code> : <small>{referralMessage || 'Not available'}</small>}
+              </div>
+              {referralCode && <button type="button" className="secondary-btn small home-copy-referral" onClick={() => void copyReferralCode()}>Copy referral ID</button>}
+              {referralMessage && referralCode && <span className="home-referral-feedback" aria-live="polite">{referralMessage}</span>}
             </div>
-          </div>
+          ) : <div className="home-account-prompt"><p>Sign in to view your member ID and referral code.</p><Link to="/login" className="text-link">Sign in to your account</Link></div>}
+        </div>
+      </section>
+
+      {homeBanners.length > 0 && <section className="managed-banner-grid" aria-label="Featured offers">{homeBanners.map((banner) => <a className="managed-banner" href={banner.targetUrl} key={banner.id} target="_blank" rel="noreferrer"><img src={banner.imageUrl} alt={banner.title} loading="lazy" /><span>{banner.title}</span></a>)}</section>}
+
+      <section className="home-feature-section">
+        <div className="home-section-heading"><div><span className="kicker">Your workspace</span><h2>Everything in one place</h2></div><p className="muted-copy">Jump straight to the part of your rewards account you need.</p></div>
+        <div className="feature-grid home-feature-grid">
+          <Link to="/dashboard" className="feature-card home-feature-card"><span className="home-feature-icon">01</span><h3>Dashboard</h3><p>See your balance, activity, and current missions.</p><span className="home-feature-link">Open dashboard <span aria-hidden="true">→</span></span></Link>
+          <Link to="/tasks" className="feature-card home-feature-card"><span className="home-feature-icon">02</span><h3>Tasks</h3><p>Browse available missions and their reward details.</p><span className="home-feature-link">Browse tasks <span aria-hidden="true">→</span></span></Link>
+          <Link to="/rewards" className="feature-card home-feature-card"><span className="home-feature-icon">03</span><h3>Rewards lounge</h3><p>Play scratch cards and the wheel for wallet rewards.</p><span className="home-feature-link">Open rewards <span aria-hidden="true">→</span></span></Link>
+          <Link to="/wallet" className="feature-card home-feature-card"><span className="home-feature-icon">04</span><h3>Wallet</h3><p>Review your available balance and transaction history.</p><span className="home-feature-link">View wallet <span aria-hidden="true">→</span></span></Link>
+          <Link to="/promos" className="feature-card home-feature-card"><span className="home-feature-icon">05</span><h3>Promo codes</h3><p>Check current partner codes and their terms.</p><span className="home-feature-link">View promos <span aria-hidden="true">→</span></span></Link>
+          <Link to="/profile" className="feature-card home-feature-card"><span className="home-feature-icon">06</span><h3>Profile & referrals</h3><p>Manage your profile and find your shareable referral ID.</p><span className="home-feature-link">Manage profile <span aria-hidden="true">→</span></span></Link>
         </div>
       </section>
     </div>
   );
 }
 
+function NotFoundPage() {
+  return (
+    <div className="page-shell not-found-page">
+      <section className="not-found-panel">
+        <span className="kicker">404 · Page not found</span>
+        <h1>This page isn't available.</h1>
+        <p className="muted-copy">The address may be incorrect, or the page may have moved.</p>
+        <div className="cta-row"><Link to="/" className="primary-btn">Return home</Link><Link to="/dashboard" className="secondary-btn">Open dashboard</Link></div>
+      </section>
+    </div>
+  );
+}
+
+type YonoPromo = {
+  id: string;
+  code: string;
+  title: string;
+  description: string;
+  terms: string | null;
+  expiresAt: string | null;
+  sourceUrl: string | null;
+};
+
+function YonoPromosPage() {
+  const [promos, setPromos] = useState<YonoPromo[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [copiedId, setCopiedId] = useState('');
+  const [copyError, setCopyError] = useState('');
+
+  useEffect(() => {
+    let active = true;
+    apiRequest<{ data: YonoPromo[] }>('/api/promos/yono-rummy')
+      .then((result) => { if (active) setPromos(result.data ?? []); })
+      .catch((requestError) => { if (active) setError(requestError instanceof Error ? requestError.message : 'Unable to load promo codes'); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, []);
+
+  async function copyCode(promo: YonoPromo) {
+    setCopyError('');
+    try {
+      await copyTextToClipboard(promo.code);
+      setCopiedId(promo.id);
+      window.setTimeout(() => setCopiedId((current) => current === promo.id ? '' : current), 1800);
+    } catch {
+      setCopyError('Copy was blocked by the browser. Select the code and copy it manually.');
+    }
+  }
+
+  return (
+    <div className="page-shell promos-page">
+      <header className="promo-heading">
+        <div>
+          <span className="kicker">Partner codes · 18+</span>
+          <h2>Yono Rummy promo codes</h2>
+          <p className="muted-copy">Current codes sent by our Telegram bot, with expiry and source details when available.</p>
+        </div>
+        <span className="promo-feed-status"><i /> Bot feed</span>
+      </header>
+
+      {copyError && <div className="form-error" role="alert">{copyError}</div>}
+      {error && <div className="form-error" role="alert">{error}</div>}
+      {loading ? <div className="promo-empty">Checking for active codes...</div> : promos.length === 0 ? (
+        <div className="promo-empty"><strong>No active codes right now</strong><span>New codes appear here after the bot submits them.</span></div>
+      ) : (
+        <section className="yono-promo-grid" aria-label="Active Yono Rummy promo codes">
+          {promos.map((promo) => (
+            <article className="yono-promo-card" key={promo.id}>
+              <div className="yono-promo-topline"><span>Yono Rummy</span><span className="promo-live-tag">Active</span></div>
+              <h3>{promo.title}</h3>
+              {promo.description && <p>{promo.description}</p>}
+              <div className="promo-code-row"><code>{promo.code}</code><button type="button" className="copy-promo-btn" onClick={() => void copyCode(promo)} aria-label={`Copy promo code ${promo.code}`}>{copiedId === promo.id ? 'Copied' : 'Copy code'}</button></div>
+              <div className="promo-card-footer">
+                {promo.expiresAt ? <span>Expires {new Date(promo.expiresAt).toLocaleDateString()}</span> : <span>Check the offer terms in Yono Rummy</span>}
+                {promo.sourceUrl && <a href={promo.sourceUrl} target="_blank" rel="noreferrer">Source post</a>}
+              </div>
+              {promo.terms && <details className="promo-terms"><summary>Terms</summary><p>{promo.terms}</p></details>}
+            </article>
+          ))}
+        </section>
+      )}
+      <p className="promo-disclaimer">18+ only. Availability, eligibility, and terms are controlled by Yono Rummy. Check local laws and play responsibly.</p>
+    </div>
+  );
+}
+
 function AuthPage({ mode }: { mode: 'login' | 'register' }) {
   const navigate = useNavigate();
+  const googleButtonRef = useRef<HTMLDivElement>(null);
+  const telegramButtonRef = useRef<HTMLDivElement>(null);
+  const providerLoginRef = useRef<(path: string, payload: unknown) => void>(() => {});
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID?.trim();
+  const telegramBotUsername = import.meta.env.VITE_TELEGRAM_BOT_USERNAME?.trim().replace(/^@/, '');
+
+  function completeLogin(response: LoginResponse, fallbackEmail = email, fallbackName?: string) {
+    const user = response.user ?? response.data?.user;
+    const token = response.accessToken || response.data?.token;
+    const userId = user?.id || response.data?.userId || '';
+    if (!token || !userId) throw new Error('The server returned an incomplete session.');
+    saveSession({
+      token,
+      userId,
+      role: user?.role || response.data?.role || 'USER',
+      name: user?.name || fallbackName,
+      email: user?.email ?? fallbackEmail,
+    });
+    navigate('/dashboard');
+  }
+
+  async function signInWithProvider(path: string, payload: unknown) {
+    if (busy) return;
+    setError('');
+    setBusy(true);
+    try {
+      const response = await apiRequest<LoginResponse>(path, { method: 'POST', body: JSON.stringify(payload) });
+      completeLogin(response);
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : 'Unable to continue');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  providerLoginRef.current = (path, payload) => { void signInWithProvider(path, payload); };
+
+  useEffect(() => {
+    if (mode !== 'login' || !googleClientId || !googleButtonRef.current) return;
+    let cancelled = false;
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    script.onload = () => {
+      const button = googleButtonRef.current;
+      if (cancelled || !button || !window.google) return;
+      window.google.accounts.id.initialize({
+        client_id: googleClientId,
+        callback: ({ credential }) => {
+          if (credential) providerLoginRef.current('/api/auth/google', { credential });
+          else setError('Google did not return a sign-in credential.');
+        },
+      });
+      window.google.accounts.id.renderButton(button, {
+        theme: 'outline',
+        size: 'large',
+        text: 'continue_with',
+        width: Math.min(button.clientWidth || 360, 400),
+      });
+    };
+    script.onerror = () => setError('Unable to load Google sign-in.');
+    document.head.appendChild(script);
+    return () => {
+      cancelled = true;
+      script.remove();
+      window.google?.accounts.id.cancel?.();
+      googleButtonRef.current?.replaceChildren();
+    };
+  }, [mode, googleClientId]);
+
+  useEffect(() => {
+    if (mode !== 'login' || !telegramBotUsername || !telegramButtonRef.current) return;
+    const container = telegramButtonRef.current;
+    window.onTelegramAuth = (data) => providerLoginRef.current('/api/auth/telegram', data);
+    const script = document.createElement('script');
+    script.src = 'https://telegram.org/js/telegram-widget.js?22';
+    script.async = true;
+    script.setAttribute('data-telegram-login', telegramBotUsername);
+    script.setAttribute('data-size', 'large');
+    script.setAttribute('data-userpic', 'false');
+    script.setAttribute('data-onauth', 'onTelegramAuth(user)');
+    container.appendChild(script);
+    script.onerror = () => setError('Unable to load Telegram sign-in.');
+    return () => {
+      delete window.onTelegramAuth;
+      script.remove();
+      container.replaceChildren();
+    };
+  }, [mode, telegramBotUsername]);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
     setError('');
     setBusy(true);
     try {
-      const response = await apiRequest<{ data?: { token: string; userId: string; role: string }; accessToken?: string; user?: { id: string; role: string; name: string; email: string } }>(`/api/auth/${mode}`, {
+      const response = await apiRequest<LoginResponse>(`/api/auth/${mode}`, {
         method: 'POST',
         body: JSON.stringify(mode === 'register' ? { name, email, password } : { email, password }),
       });
-      const legacy = response.data;
-      const token = response.accessToken || legacy?.token;
-      const user = response.user;
-      if (!token || (!legacy && !user)) throw new Error('The server returned an incomplete session.');
-      saveSession({ token, userId: user?.id || legacy?.userId || '', role: user?.role || legacy?.role || 'USER', name: user?.name || (mode === 'register' ? name : undefined), email: user?.email || email });
-      navigate('/dashboard');
+      completeLogin(response, email, mode === 'register' ? name : undefined);
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : 'Unable to continue');
     } finally {
@@ -100,6 +369,14 @@ function AuthPage({ mode }: { mode: 'login' | 'register' }) {
           {error && <div className="form-error">{error}</div>}
           <button className="primary-btn full-width" disabled={busy}>{busy ? 'Working...' : mode === 'login' ? 'Sign in' : 'Create account'}</button>
         </form>
+        {mode === 'login' && (googleClientId || telegramBotUsername) && <div className="social-auth">
+          <div className="social-auth-divider"><span>Or continue with</span></div>
+          <div className="social-auth-buttons" aria-busy={busy}>
+            {googleClientId && <div className="google-signin-button" ref={googleButtonRef} />}
+            {telegramBotUsername && <div className="telegram-signin-button" ref={telegramButtonRef} />}
+          </div>
+        </div>}
+        {mode === 'login' && !googleClientId && !telegramBotUsername && import.meta.env.DEV && <p className="social-auth-setup">Configure Google or Telegram credentials to enable social sign-in.</p>}
       </div>
     </div>
   );
@@ -259,6 +536,8 @@ function AppLayout() {
           <NavLink to="/">Home</NavLink>
           <NavLink to="/dashboard">Dashboard</NavLink>
           <NavLink to="/tasks">Tasks</NavLink>
+          <NavLink to="/rewards">Rewards</NavLink>
+          <NavLink to="/promos">Promo codes</NavLink>
           <NavLink to="/wallet">Wallet</NavLink>
           <NavLink to="/profile">Profile</NavLink>
           <button className="theme-toggle" aria-label="Toggle theme" onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}>{theme === 'light' ? '◐' : '☼'}</button>
@@ -269,13 +548,15 @@ function AppLayout() {
       <main className="page-body">
         <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route path="/promos" element={<YonoPromosPage />} />
           <Route path="/dashboard" element={<RequireSession><DashboardPage /></RequireSession>} />
           <Route path="/tasks" element={<RequireSession><TasksPage /></RequireSession>} />
+          <Route path="/rewards" element={<RequireSession><RewardsPage /></RequireSession>} />
           <Route path="/wallet" element={<RequireSession><WalletPage /></RequireSession>} />
           <Route path="/profile" element={<RequireSession><ProfilePage /></RequireSession>} />
           <Route path="/login" element={<AuthPage mode="login" />} />
           <Route path="/register" element={<AuthPage mode="register" />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </main>
     </div>
