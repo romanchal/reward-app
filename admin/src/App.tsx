@@ -8,6 +8,7 @@ import { TasksPage } from './pages/TasksPage';
 import { WithdrawalsPage } from './pages/WithdrawalsPage';
 import { FraudPage } from './pages/FraudPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { ManualPaymentsPage } from './pages/ManualPaymentsPage';
 
 function Shell({ children, onLogout }: { children: React.ReactNode; onLogout: () => void }) {
   return (
@@ -18,6 +19,7 @@ function Shell({ children, onLogout }: { children: React.ReactNode; onLogout: ()
         <NavLink to="/users">Users</NavLink>
         <NavLink to="/tasks">Tasks</NavLink>
         <NavLink to="/withdrawals">Withdrawals</NavLink>
+        <NavLink to="/manual-payments">Manual payments</NavLink>
         <NavLink to="/fraud">Fraud</NavLink>
         <NavLink to="/settings">Settings</NavLink>
         <button className="btn" onClick={onLogout}>Log out</button>
@@ -61,6 +63,7 @@ export function App() {
         <Route path="/users" element={<UsersPage />} />
         <Route path="/tasks" element={<TasksPage />} />
         <Route path="/withdrawals" element={<WithdrawalsPage />} />
+        <Route path="/manual-payments" element={<ManualPaymentsPage />} />
         <Route path="/fraud" element={<FraudPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />

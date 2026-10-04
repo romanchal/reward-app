@@ -123,6 +123,9 @@ enum AuditAction {
   TASK_DISABLE
   SETTINGS_UPDATE
   FRAUD_REVIEW
+  MANUAL_PAYMENT_CREATE
+  MANUAL_PAYMENT_APPROVE
+  MANUAL_PAYMENT_REJECT
 }
 
 enum LeaderboardPeriod {
@@ -135,6 +138,20 @@ enum CampaignStatus {
   ACTIVE
   PAUSED
   EXPIRED
+}
+
+enum ManualPaymentMethod {
+  CASH
+  BANK
+  CHEQUE
+  UPI
+  OTHER
+}
+
+enum ManualPaymentStatus {
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
 }
 
 model User {
@@ -541,6 +558,27 @@ model AppSetting {
   key       String   @id
   value     Json
   updatedAt DateTime @updatedAt
+}
+
+model ManualPayment {
+  id              String              @id @default(cuid())
+  userId          String
+  amount          Int
+  currency        String              @default("INR")
+  method          ManualPaymentMethod
+  referenceId     String              @unique
+  proofUrl        String?
+  notes           String?
+  status          ManualPaymentStatus @default(PENDING_APPROVAL)
+  createdById     String
+  approvedById    String?
+  approvedAt      DateTime?
+  rejectionReason String?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  @@index([userId, status, createdAt])
+  @@index([status, createdAt])
 }
 
 model Campaign {

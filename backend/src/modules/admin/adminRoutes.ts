@@ -6,6 +6,7 @@ import { dashboardMetrics, disableTask, getSettings, listUsers, setUserBanned, u
 import { approveAndPayout, bulkApprove, listAllWithdrawals, transitionWithdrawal } from '../withdrawals/withdrawalService';
 import { listFraudEvents, reviewFraudEvent } from '../fraud/fraudService';
 import { writeAudit } from '../../lib/audit';
+import { manualPaymentRoutes } from '../manualPayments/manualPaymentRoutes';
 
 const taskSchema = z.object({
   title: z.string().min(2).max(100),
@@ -105,6 +106,8 @@ export function adminRoutes(prisma: PrismaClient) {
     await writeAudit(prisma, { actorUserId: req.user!.id, action: 'FRAUD_REVIEW', entityType: 'FraudEvent', entityId: String(req.params.id), details: { decision: input.decision } });
     res.json(updated);
   }));
+
+  router.use('/manual-payments', manualPaymentRoutes(prisma));
 
   router.get('/settings', asyncHandler(async (_req, res) => res.json(await getSettings(prisma))));
   router.post('/settings', asyncHandler(async (req, res) => {
