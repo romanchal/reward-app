@@ -3,7 +3,7 @@ import { z } from 'zod';
 import type { PrismaClient } from '@prisma/client';
 import { asyncHandler } from '../../lib/http-error';
 import { dashboardMetrics, disableTask, getSettings, listUsers, setUserBanned, updateSetting, upsertTask } from './adminService';
-import { listAllWithdrawals, transitionWithdrawal } from '../withdrawals/withdrawalService';
+import { approveAndPayout, bulkApprove, listAllWithdrawals, transitionWithdrawal } from '../withdrawals/withdrawalService';
 import { listFraudEvents, reviewFraudEvent } from '../fraud/fraudService';
 import { writeAudit } from '../../lib/audit';
 
@@ -70,9 +70,16 @@ export function adminRoutes(prisma: PrismaClient) {
   }));
   router.post('/withdrawals/:id/approve', asyncHandler(async (req, res) => {
     const input = withdrawalActionSchema.parse(req.body ?? {});
-    const updated = await transitionWithdrawal(prisma, String(req.params.id), 'APPROVED', input.reason);
+    const updated = await approveAndPayout(prisma, String(req.params.id), input.reason);
     await writeAudit(prisma, { actorUserId: req.user!.id, action: 'WITHDRAWAL_APPROVE', entityType: 'Withdrawal', entityId: String(req.params.id), details: { reason: input.reason ?? null } });
     res.json(updated);
+  }));
+
+  router.post('/withdrawals/bulk-approve', asyncHandler(async (req, res) => {
+    const input = z.object({ ids: z.array(z.string().min(1)).min(1).max(100) }).parse(req.body);
+    const result = await bulkApprove(prisma, input.ids);
+    await writeAudit(prisma, { actorUserId: req.user!.id, action: 'WITHDRAWAL_APPROVE', entityType: 'Withdrawal', entityId: 'bulk', details: result });
+    res.json(result);
   }));
   router.post('/withdrawals/:id/reject', asyncHandler(async (req, res) => {
     const input = withdrawalActionSchema.parse(req.body ?? {});

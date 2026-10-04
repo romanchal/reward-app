@@ -10,6 +10,7 @@ declare global {
       user?: { id: string; role: string };
       requestId?: string;
       idempotencyKey?: string;
+      rawBody?: string;
     }
   }
 }

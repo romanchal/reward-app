@@ -20,6 +20,7 @@ import { offerRoutes } from './modules/offers/offerRoutes';
 import { leaderboardRoutes } from './modules/leaderboard/leaderboardRoutes';
 import { adminRoutes } from './modules/admin/adminRoutes';
 import { streakRoutes } from './modules/streak/streakRoutes';
+import { razorpayWebhookRoutes } from './modules/webhooks/razorpayWebhook';
 
 const PROTECTED_AUTH_PATHS = new Set(['/me']);
 
@@ -63,7 +64,12 @@ export function createApp(prisma: PrismaClient) {
   }));
   app.disable('x-powered-by');
   app.set('trust proxy', 1);
-  app.use(express.json({ limit: '256kb' }));
+  app.use(express.json({
+    limit: '256kb',
+    verify: (req, _res, buf) => {
+      (req as Request & { rawBody?: string }).rawBody = buf.toString('utf8');
+    },
+  }));
 
   app.use((req: Request, res: Response, next: NextFunction) => {
     req.requestId = req.get('X-Request-Id') || randomUUID();
@@ -117,6 +123,8 @@ export function createApp(prisma: PrismaClient) {
   app.use('/api/offers', guard, offerRoutes(prisma));
   app.use('/api/leaderboard', guard, leaderboardRoutes(prisma));
   app.use('/api/streak', guard, streakRoutes(prisma));
+
+  app.use('/api/webhooks', razorpayWebhookRoutes(prisma));
 
   app.use('/api/admin', guard, adminMiddleware, adminRoutes(prisma));
 

@@ -447,6 +447,8 @@ model Withdrawal {
   recipient    String
   status       WithdrawalStatus  @default(PENDING)
   reviewReason String?
+  providerRef  String?           @unique
+  providerPayload Json?
   createdAt    DateTime          @default(now())
   processedAt  DateTime?
 
