@@ -1,0 +1,691 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Reward App · The Operator's Book</title>
+<style>
+  @page { size: A4; margin: 22mm 18mm; }
+  :root {
+    --ink: #111;
+    --soft: #555;
+    --muted: #8a8a8a;
+    --rule: #e5e5e5;
+    --accent: #16a34a;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: Georgia, "Iowan Old Style", "Palatino Linotype", serif;
+    font-size: 11.5pt;
+    line-height: 1.6;
+    color: var(--ink);
+    background: #fdfdfc;
+  }
+  .page {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 48px 32px 72px;
+  }
+  .cover {
+    min-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding-top: 20vh;
+    padding-bottom: 10vh;
+    page-break-after: always;
+  }
+  .cover-title {
+    font-family: "Helvetica Neue", Inter, system-ui, sans-serif;
+    font-weight: 300;
+    font-size: 44pt;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    margin-bottom: 24px;
+  }
+  .cover-sub {
+    font-family: "Helvetica Neue", Inter, system-ui, sans-serif;
+    font-size: 13pt;
+    color: var(--soft);
+    letter-spacing: 0.02em;
+  }
+  .cover-foot {
+    display: flex;
+    justify-content: space-between;
+    font-family: "Helvetica Neue", Inter, system-ui, sans-serif;
+    font-size: 10pt;
+    color: var(--muted);
+    border-top: 1px solid var(--rule);
+    padding-top: 12px;
+  }
+  h1, h2, h3, h4 {
+    font-family: "Helvetica Neue", Inter, system-ui, sans-serif;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+  }
+  h1 {
+    font-size: 24pt;
+    font-weight: 500;
+    margin: 48px 0 8px;
+    padding-top: 12px;
+    border-top: 2px solid var(--ink);
+    page-break-before: always;
+  }
+  h1:first-of-type { page-break-before: avoid; }
+  h2 {
+    font-size: 15pt;
+    font-weight: 600;
+    margin: 32px 0 8px;
+  }
+  h3 {
+    font-size: 12pt;
+    font-weight: 600;
+    margin: 20px 0 4px;
+    color: var(--soft);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  p { margin: 0 0 12px; }
+  .lead {
+    font-size: 13pt;
+    line-height: 1.65;
+    color: var(--soft);
+    margin: 8px 0 24px;
+  }
+  ul, ol { padding-left: 20px; margin: 0 0 16px; }
+  li { margin: 4px 0; }
+  code, kbd, pre {
+    font-family: var(--mono);
+    font-size: 10.5pt;
+  }
+  code {
+    background: #f3f3f1;
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+  pre {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 14px 16px;
+    border-radius: 6px;
+    overflow-x: auto;
+    line-height: 1.5;
+    font-size: 10pt;
+    margin: 10px 0 18px;
+  }
+  pre code { background: transparent; padding: 0; color: inherit; }
+  .callout {
+    border-left: 3px solid var(--accent);
+    background: #f4faf6;
+    padding: 10px 14px;
+    margin: 14px 0 18px;
+    font-size: 10.5pt;
+  }
+  .warn {
+    border-left: 3px solid #d97706;
+    background: #fef9ed;
+  }
+  .danger {
+    border-left: 3px solid #b91c1c;
+    background: #fdf3f3;
+  }
+  .meter {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 8px 0 24px;
+    font-family: "Helvetica Neue", Inter, system-ui, sans-serif;
+    font-size: 10.5pt;
+    color: var(--soft);
+  }
+  .meter-bar {
+    flex: 1;
+    height: 10px;
+    background: #eee;
+    border-radius: 999px;
+    overflow: hidden;
+    position: relative;
+  }
+  .meter-fill {
+    height: 100%;
+    background: var(--accent);
+  }
+  .toc {
+    columns: 1;
+    margin: 24px 0 48px;
+    font-family: "Helvetica Neue", Inter, system-ui, sans-serif;
+    font-size: 11pt;
+  }
+  .toc ol { padding-left: 24px; }
+  .toc li { margin: 6px 0; }
+  .toc a { color: var(--ink); text-decoration: none; }
+  .toc a::after { content: ""; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0 24px;
+    font-family: "Helvetica Neue", Inter, system-ui, sans-serif;
+    font-size: 10.5pt;
+  }
+  th, td {
+    text-align: left;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+  }
+  th {
+    color: var(--muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    font-size: 9pt;
+    letter-spacing: 0.05em;
+  }
+  .step {
+    display: grid;
+    grid-template-columns: 44px 1fr;
+    gap: 12px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .step-num {
+    font-family: "Helvetica Neue", Inter, system-ui, sans-serif;
+    font-size: 22pt;
+    font-weight: 300;
+    color: var(--accent);
+    line-height: 1;
+    padding-top: 2px;
+  }
+  .step h4 {
+    margin: 0 0 4px;
+    font-size: 12pt;
+    font-weight: 600;
+  }
+  .step p { margin: 0 0 6px; font-size: 11pt; }
+  .checklist li {
+    list-style: none;
+    padding-left: 22px;
+    position: relative;
+    margin: 6px 0;
+    font-family: "Helvetica Neue", Inter, system-ui, sans-serif;
+    font-size: 11pt;
+  }
+  .checklist li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 4px;
+    width: 14px;
+    height: 14px;
+    border: 1.5px solid var(--ink);
+    border-radius: 3px;
+  }
+  .foot {
+    margin-top: 48px;
+    padding-top: 16px;
+    border-top: 1px solid var(--rule);
+    color: var(--muted);
+    font-size: 9.5pt;
+    font-family: "Helvetica Neue", Inter, system-ui, sans-serif;
+  }
+  .noprint { font-family: "Helvetica Neue", Inter, system-ui, sans-serif; }
+  @media print {
+    body { background: #fff; }
+    .noprint { display: none; }
+    a { color: var(--ink); text-decoration: none; }
+  }
+  .print-hint {
+    position: sticky;
+    top: 0;
+    background: #0f172a;
+    color: #fff;
+    padding: 10px 16px;
+    text-align: center;
+    font-size: 10.5pt;
+    z-index: 10;
+  }
+  .print-hint button {
+    margin-left: 10px;
+    padding: 4px 12px;
+    background: var(--accent);
+    color: #062611;
+    border: 0;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+</style>
+</head>
+<body>
+
+<div class="print-hint noprint">
+  Press <kbd>Ctrl</kbd>+<kbd>P</kbd> (or <kbd>⌘</kbd>+<kbd>P</kbd>) and choose <strong>Save as PDF</strong>.
+  <button onclick="window.print()">Print now</button>
+</div>
+
+<div class="page">
+
+<!-- ========== COVER ========== -->
+<section class="cover">
+  <div>
+    <div class="cover-sub">The Operator's Book</div>
+    <h1 class="cover-title" style="border: 0; padding: 0; margin-top: 8px;">Reward App<br/>From Code to Live.</h1>
+    <p class="lead">A short, honest guide for the parts a computer can't do.</p>
+  </div>
+  <div class="cover-foot">
+    <span>Version 1 · October 2026</span>
+    <span>github.com/NectarScript/reward-app</span>
+  </div>
+</section>
+
+<!-- ========== CONTENTS ========== -->
+<section>
+  <h1 style="border: 0; padding: 0; page-break-before: avoid;">Contents</h1>
+  <div class="toc">
+    <ol>
+      <li>What this is &amp; what's inside</li>
+      <li>Where the project stands today</li>
+      <li>The seven steps to go live</li>
+      <li>Step 1 — Fresh install on a server</li>
+      <li>Step 2 — Secrets you must generate</li>
+      <li>Step 3 — Sentry (error reports)</li>
+      <li>Step 4 — Razorpay (real payouts)</li>
+      <li>Step 5 — A domain and HTTPS</li>
+      <li>Step 6 — First admin + first test</li>
+      <li>Step 7 — Backups &amp; monitoring</li>
+      <li>How long each step takes</li>
+      <li>Common problems &amp; fixes</li>
+      <li>Final checklist</li>
+    </ol>
+  </div>
+</section>
+
+<!-- ========== 1 ========== -->
+<section>
+  <h1>1. What this is &amp; what's inside</h1>
+  <p class="lead">A rewards web app with a wallet, tasks, missions, referrals, withdrawals, admin console, and an audit trail. Demo mode by default. Real money only turns on when you flip the keys.</p>
+
+  <h3>What was built</h3>
+  <table>
+    <tr><th>Area</th><th>What it does</th></tr>
+    <tr><td>User app</td><td>Sign in, home dashboard, earn tasks, missions, rewards catalogue, leaderboard, profile, withdrawals.</td></tr>
+    <tr><td>Admin console</td><td>Users (ban/restore), tasks (create/disable), withdrawals (approve/reject/bulk), fraud review, manual payments, settings.</td></tr>
+    <tr><td>Backend API</td><td>Express + Postgres + Prisma. JWT auth, refresh cookies, rate limits, field encryption, audit log, Razorpay payouts, webhook, idempotent money moves.</td></tr>
+    <tr><td>Infra</td><td>Docker Compose, healthchecks, GitHub Actions CI, Sentry hooks everywhere, Postman collection.</td></tr>
+  </table>
+
+  <h3>What was NOT built (on purpose)</h3>
+  <ul>
+    <li>Password reset flow — add when a user forgets a password.</li>
+    <li>Two-factor auth — add when the admin console is public.</li>
+    <li>File-upload for manual-payment proof — stores a URL for now, point at any object storage later.</li>
+    <li>Server-rendered PDF receipts — HTML + browser print covers it.</li>
+    <li>KYC — depends on the market you serve.</li>
+  </ul>
+</section>
+
+<!-- ========== 2 ========== -->
+<section>
+  <h1>2. Where the project stands today</h1>
+  <p class="lead">The code is done. The <em>live service</em> is not. Here's the honest split.</p>
+
+  <h3>Code: 100%</h3>
+  <div class="meter">
+    <span>Code shipped</span>
+    <div class="meter-bar"><div class="meter-fill" style="width: 100%"></div></div>
+    <span>100%</span>
+  </div>
+
+  <h3>Operations &amp; setup: about 20%</h3>
+  <div class="meter">
+    <span>Live-ready</span>
+    <div class="meter-bar"><div class="meter-fill" style="width: 20%; background: #d97706"></div></div>
+    <span>20%</span>
+  </div>
+  <p>What that 20% means: the code builds, runs, and self-tests on <code>docker compose up</code> in demo mode. The remaining 80% is <strong>paperwork and account creation</strong>: Sentry, Razorpay, a domain, a server, TLS, backups.</p>
+
+  <div class="callout">
+    <strong>Translation:</strong> you can show the app to someone today. You cannot take a real rupee until Steps 2–7 of this book are done.
+  </div>
+</section>
+
+<!-- ========== 3 ========== -->
+<section>
+  <h1>3. The seven steps to go live</h1>
+  <p class="lead">Do them in order. Do not skip. Each step unlocks the next.</p>
+
+  <div class="step"><div class="step-num">1</div><div>
+    <h4>Fresh install on a server</h4>
+    <p>Pick a server (DigitalOcean, Hetzner, your laptop). Install Docker. Clone the repo. Boot it.</p>
+  </div></div>
+  <div class="step"><div class="step-num">2</div><div>
+    <h4>Generate the secrets</h4>
+    <p>Random keys for JWT, refresh, and encryption. One shell command does all three.</p>
+  </div></div>
+  <div class="step"><div class="step-num">3</div><div>
+    <h4>Create a Sentry project</h4>
+    <p>Paste two DSNs into <code>.env</code>. Now you'll know when the app breaks before users tell you.</p>
+  </div></div>
+  <div class="step"><div class="step-num">4</div><div>
+    <h4>Create a Razorpay account</h4>
+    <p>Get API keys. Get the virtual account number. Set up the webhook. Paste four values into <code>.env</code>.</p>
+  </div></div>
+  <div class="step"><div class="step-num">5</div><div>
+    <h4>Buy a domain &amp; put HTTPS in front</h4>
+    <p>Point two subdomains at your server. Install Caddy. HTTPS is automatic from there.</p>
+  </div></div>
+  <div class="step"><div class="step-num">6</div><div>
+    <h4>Change the default admin password &amp; smoke-test</h4>
+    <p>Log in. Change the admin password. Run through: register → earn → withdraw → admin approve.</p>
+  </div></div>
+  <div class="step"><div class="step-num">7</div><div>
+    <h4>Backups &amp; monitoring</h4>
+    <p>Daily DB dump to encrypted storage. Uptime monitor pinging <code>/api/health</code>. Done.</p>
+  </div></div>
+</section>
+
+<!-- ========== STEP 1 ========== -->
+<section>
+  <h1>Step 1 — Fresh install on a server</h1>
+  <p class="lead">Any Linux box with Docker will do. 2 CPU, 2 GB RAM is enough to start.</p>
+
+  <h2>Shopping list</h2>
+  <ul>
+    <li>A VPS (DigitalOcean "Basic" droplet, Hetzner CX22, AWS Lightsail — any of them).</li>
+    <li>SSH access to it.</li>
+    <li>A GitHub account that can read the repo.</li>
+  </ul>
+
+  <h2>Commands</h2>
+<pre><code>ssh root@your-server-ip
+apt update &amp;&amp; apt install -y docker.io docker-compose-plugin git
+git clone https://github.com/NectarScript/reward-app.git
+cd reward-app
+cp .env.example .env
+docker compose up -d --build</code></pre>
+
+  <p>Wait 5–10 minutes the first time (image pulls + build).</p>
+
+  <h2>How to check it worked</h2>
+<pre><code>curl http://localhost:4000/api/health
+# expect: {"status":"ok","env":"development",...}</code></pre>
+
+  <div class="callout">If the curl returns ok, Step 1 is done. The app is running in demo mode. You can now plug in real services.</div>
+</section>
+
+<!-- ========== STEP 2 ========== -->
+<section>
+  <h1>Step 2 — Secrets you must generate</h1>
+  <p class="lead">Three random values. One script generates them. Paste the output into <code>.env.prod</code>.</p>
+
+  <h2>Why</h2>
+  <ul>
+    <li><code>JWT_SECRET</code> &amp; <code>JWT_REFRESH_SECRET</code> — sign the tokens that keep users signed in.</li>
+    <li><code>ENCRYPTION_KEY</code> — encrypts personal data (like UPI handles) in the database.</li>
+  </ul>
+
+  <h2>Command</h2>
+<pre><code>bash scripts/gen-secrets.sh &gt; .env.prod</code></pre>
+
+  <p>Open <code>.env.prod</code> and verify three lines have long random values. That's it.</p>
+
+  <div class="danger">
+    <strong>Never commit <code>.env.prod</code> to git.</strong> It's already in <code>.gitignore</code>. Verify with <code>git status</code> before every push.
+  </div>
+</section>
+
+<!-- ========== STEP 3 ========== -->
+<section>
+  <h1>Step 3 — Sentry (error reports)</h1>
+  <p class="lead">Free tier. 5 minutes. Lets you see every crash before a user complains.</p>
+
+  <h2>What to do</h2>
+  <ol>
+    <li>Sign up at <code>sentry.io</code>.</li>
+    <li>Create a project → platform <strong>Node.js</strong> → name it <em>reward-app-backend</em>. Copy the DSN.</li>
+    <li>Create another project → platform <strong>React</strong> → name it <em>reward-app-web</em>. Copy that DSN.</li>
+    <li>Open <code>.env.prod</code>. Paste:</li>
+  </ol>
+<pre><code>SENTRY_DSN=https://&lt;backend-dsn-here&gt;@sentry.io/...
+VITE_SENTRY_DSN=https://&lt;react-dsn-here&gt;@sentry.io/...</code></pre>
+
+  <h2>Verify</h2>
+  <p>After <code>docker compose up --build</code>, hit an invalid endpoint. Within a minute the error should appear on your Sentry dashboard.</p>
+
+  <div class="callout">If no DSN is set, Sentry does nothing. The app runs normally. So setting it is optional for Day 1 but recommended before Day 2.</div>
+</section>
+
+<!-- ========== STEP 4 ========== -->
+<section>
+  <h1>Step 4 — Razorpay (real payouts)</h1>
+  <p class="lead">This is the one big setup. One hour, lots of forms. After this you can pay users real money.</p>
+
+  <h2>Account</h2>
+  <ol>
+    <li>Sign up at <code>razorpay.com</code>.</li>
+    <li>Activate <strong>RazorpayX / Payouts</strong>. You will submit business documents (GST, PAN, bank statement). Approval takes 1–3 business days.</li>
+    <li>Fund the Razorpay virtual account from your business bank account. You pay out from this balance.</li>
+  </ol>
+
+  <h2>API keys</h2>
+  <ol>
+    <li>Dashboard → <em>Account &amp; Settings</em> → <strong>API Keys</strong> → Generate.</li>
+    <li>Copy <strong>Key ID</strong> and <strong>Key Secret</strong>. The secret is shown only once.</li>
+    <li>Dashboard → <em>RazorpayX</em> → <strong>Account Number</strong>. Copy the virtual account number (looks like <code>7878780080xxxxxx</code>).</li>
+  </ol>
+
+  <h2>Webhook</h2>
+  <ol>
+    <li>Dashboard → <em>Webhooks</em> → <strong>Add</strong>.</li>
+    <li>URL: <code>https://api.yourdomain.com/api/webhooks/razorpay</code> (your production API URL).</li>
+    <li>Events: <strong>payout.processed</strong>, <strong>payout.failed</strong>, <strong>payout.reversed</strong>.</li>
+    <li>Set a secret (any random string). Save. Copy it.</li>
+  </ol>
+
+  <h2>Paste into <code>.env.prod</code></h2>
+<pre><code>RAZORPAY_KEY_ID=rzp_live_xxx
+RAZORPAY_KEY_SECRET=xxx
+RAZORPAY_ACCOUNT_NUMBER=7878780080xxxxxx
+RAZORPAY_WEBHOOK_SECRET=the-random-string-you-set</code></pre>
+
+  <div class="warn">
+    <strong>Test with keys first.</strong> Razorpay has <em>Test Mode</em> keys (<code>rzp_test_...</code>). Use those while you set up the webhook. Switch to <code>rzp_live_</code> only after end-to-end testing.
+  </div>
+</section>
+
+<!-- ========== STEP 5 ========== -->
+<section>
+  <h1>Step 5 — A domain and HTTPS</h1>
+  <p class="lead">Your users won't type an IP address. You need a domain. HTTPS is free with Caddy.</p>
+
+  <h2>Buy a domain</h2>
+  <p>Any registrar: Namecheap, Cloudflare, Porkbun. Buy <code>yourbrand.com</code>.</p>
+
+  <h2>Point DNS at your server</h2>
+  <p>In the registrar's DNS panel, add three records (A records) pointing at your server's IP:</p>
+  <table>
+    <tr><th>Name</th><th>Type</th><th>Value</th></tr>
+    <tr><td>app</td><td>A</td><td>your.server.ip.address</td></tr>
+    <tr><td>admin</td><td>A</td><td>your.server.ip.address</td></tr>
+    <tr><td>api</td><td>A</td><td>your.server.ip.address</td></tr>
+  </table>
+  <p>DNS takes 5 minutes to 24 hours to propagate.</p>
+
+  <h2>Install Caddy on the server</h2>
+<pre><code>apt install -y caddy</code></pre>
+
+  <h2>Edit <code>/etc/caddy/Caddyfile</code></h2>
+<pre><code>app.yourbrand.com {
+  reverse_proxy 127.0.0.1:5173
+}
+
+admin.yourbrand.com {
+  reverse_proxy 127.0.0.1:5174
+}
+
+api.yourbrand.com {
+  reverse_proxy 127.0.0.1:4000
+}</code></pre>
+
+<pre><code>systemctl restart caddy</code></pre>
+
+  <p>Caddy automatically gets a Let's Encrypt certificate. HTTPS is now live.</p>
+
+  <h2>Tell the app its public URLs</h2>
+  <p>In <code>.env.prod</code>:</p>
+<pre><code>FRONTEND_ORIGIN=https://app.yourbrand.com
+ADMIN_ORIGIN=https://admin.yourbrand.com</code></pre>
+
+  <h2>Switch to the production compose file</h2>
+<pre><code>docker compose \
+  --env-file .env.prod \
+  -f docker-compose.yml \
+  -f docker-compose.prod.yml \
+  up -d --build</code></pre>
+</section>
+
+<!-- ========== STEP 6 ========== -->
+<section>
+  <h1>Step 6 — First admin + smoke test</h1>
+  <p class="lead">Change the default password. Make one of everything. Watch it work.</p>
+
+  <h2>Seed demo data (optional)</h2>
+<pre><code>docker compose exec backend node dist/scripts/seed.js</code></pre>
+  <p>Creates 20 demo users + <code>admin@example.com</code> / <code>password123</code>.</p>
+
+  <div class="danger">
+    <strong>Change this admin password immediately.</strong> Everyone who reads this book knows it.
+    Until a password-change endpoint ships, update it directly:
+<pre><code>docker compose exec postgres psql -U reward_app -d reward_app -c \
+"UPDATE \"User\" SET \"passwordHash\" = '&lt;bcrypt-hash-here&gt;' WHERE email = 'admin@example.com';"</code></pre>
+    Generate a bcrypt hash with:
+<pre><code>docker compose exec backend node -e \
+"console.log(require('bcryptjs').hashSync('your-new-password', 12))"</code></pre>
+  </div>
+
+  <h2>Smoke test</h2>
+  <ol>
+    <li>Open <code>https://app.yourbrand.com</code>. Register a new user.</li>
+    <li>Complete 1 task. Check the wallet balance went up.</li>
+    <li>Request a withdrawal (any small amount).</li>
+    <li>Open <code>https://admin.yourbrand.com</code>, log in as admin.</li>
+    <li>Approve the withdrawal. If Razorpay keys are live, a real payout fires.</li>
+    <li>Create a second admin user. Try the Manual Payment flow (maker-checker).</li>
+  </ol>
+</section>
+
+<!-- ========== STEP 7 ========== -->
+<section>
+  <h1>Step 7 — Backups &amp; monitoring</h1>
+  <p class="lead">The boring step. It's what separates a toy from a service.</p>
+
+  <h2>Daily database backup</h2>
+  <p>On the server, add this to <code>crontab -e</code>:</p>
+<pre><code>0 3 * * * cd /root/reward-app &amp;&amp; \
+  docker compose exec -T postgres pg_dump -U reward_app reward_app | \
+  gzip &gt; /var/backups/reward-$(date +\%F).sql.gz</code></pre>
+
+  <p>Then push <code>/var/backups</code> to S3 / Backblaze / rsync.net nightly.</p>
+
+  <h2>Uptime monitor</h2>
+  <p>Sign up for <strong>UptimeRobot</strong> (free). Add a monitor:</p>
+  <ul>
+    <li>URL: <code>https://api.yourbrand.com/api/health</code></li>
+    <li>Interval: 5 minutes</li>
+    <li>Alert: your email + phone (SMS)</li>
+  </ul>
+
+  <h2>What else to watch for</h2>
+  <ul>
+    <li><strong>Disk space</strong> on the server. Postgres grows. Set an alert at 80%.</li>
+    <li><strong>Sentry errors</strong> — set a weekly digest email.</li>
+    <li><strong>Razorpay balance</strong> — add a reminder to top up.</li>
+  </ul>
+</section>
+
+<!-- ========== TIMING ========== -->
+<section>
+  <h1>How long each step takes</h1>
+  <p class="lead">Rough estimate if you've done this kind of thing before. Add 50% if it's your first time.</p>
+
+  <table>
+    <tr><th>Step</th><th>Hands-on</th><th>Waiting</th></tr>
+    <tr><td>1. Install on server</td><td>30 min</td><td>10 min (build)</td></tr>
+    <tr><td>2. Generate secrets</td><td>5 min</td><td>—</td></tr>
+    <tr><td>3. Sentry</td><td>15 min</td><td>—</td></tr>
+    <tr><td>4. Razorpay — signup &amp; KYC</td><td>45 min</td><td><strong>1–3 business days</strong></td></tr>
+    <tr><td>4. Razorpay — keys &amp; webhook</td><td>20 min</td><td>—</td></tr>
+    <tr><td>5. Domain + Caddy + DNS</td><td>30 min</td><td>Up to 24 h (DNS)</td></tr>
+    <tr><td>6. Admin password + smoke test</td><td>20 min</td><td>—</td></tr>
+    <tr><td>7. Backups + monitoring</td><td>30 min</td><td>—</td></tr>
+    <tr><th>Total active time</th><th colspan="2">~3.5 hours</th></tr>
+    <tr><th>Total wall-clock</th><th colspan="2">1–3 days (gated by Razorpay KYC)</th></tr>
+  </table>
+
+  <div class="callout">
+    If you only want to demo (no real payouts), you can skip Step 4 entirely. Demo mode works out of the box. Then you're live in a weekend.
+  </div>
+</section>
+
+<!-- ========== TROUBLESHOOTING ========== -->
+<section>
+  <h1>Common problems &amp; fixes</h1>
+
+  <h3>"Cannot connect to Docker daemon"</h3>
+  <p>Docker Desktop isn't running (or you're on Linux without the service enabled). Start Docker Desktop and wait for green "Engine running". On Linux: <code>systemctl start docker</code>.</p>
+
+  <h3>"Repository not found" when pulling</h3>
+  <p>Your GitHub login doesn't have access. Run <code>gh auth switch --user NectarScript</code> to switch accounts, or ask the owner to add you as a collaborator.</p>
+
+  <h3>"Port 4000 (or 5173, 5174) already in use"</h3>
+  <p>Something else is bound to that port. Find it: <code>lsof -i :4000</code>. Stop it, or change the port mapping in <code>docker-compose.yml</code>.</p>
+
+  <h3>Admin login says "Admin access required"</h3>
+  <p>You registered a normal user. Log in with <code>admin@example.com</code> (after seeding), or make an existing user admin:</p>
+<pre><code>docker compose exec postgres psql -U reward_app -d reward_app -c \
+"UPDATE \"User\" SET role='ADMIN' WHERE email='you@example.com';"</code></pre>
+
+  <h3>Withdrawal approval says "Razorpay not configured"</h3>
+  <p>You set Razorpay keys but one of them is wrong. Double-check all four variables in <code>.env.prod</code>. Restart the backend: <code>docker compose restart backend</code>.</p>
+
+  <h3>Razorpay webhook says "Invalid signature"</h3>
+  <p>The <code>RAZORPAY_WEBHOOK_SECRET</code> in <code>.env.prod</code> doesn't match the one you set in Razorpay dashboard. They must be identical.</p>
+
+  <h3>"Insufficient balance" when a user tries to withdraw</h3>
+  <p>Expected. User needs <code>wallet.balance ≥ amount</code>. For demo testing, as admin create a Manual Payment to top up a user, approve it (from a second admin), and that user can now withdraw.</p>
+</section>
+
+<!-- ========== CHECKLIST ========== -->
+<section>
+  <h1>Final checklist</h1>
+  <p class="lead">Tick every box before telling anyone the app is live.</p>
+
+  <ul class="checklist">
+    <li>Server up, <code>docker compose ps</code> shows all services healthy</li>
+    <li>Fresh <code>JWT_SECRET</code>, <code>JWT_REFRESH_SECRET</code>, <code>ENCRYPTION_KEY</code> in <code>.env.prod</code></li>
+    <li><code>.env.prod</code> is NOT in git (<code>git status</code> clean)</li>
+    <li>Sentry DSN set — test error visible in Sentry dashboard</li>
+    <li>Razorpay keys set — one test payout succeeded in Razorpay dashboard</li>
+    <li>Webhook configured — simulated payout flipped a withdrawal to COMPLETED</li>
+    <li>Domain purchased, DNS pointed at server</li>
+    <li>Caddy running, both subdomains load over HTTPS (padlock in browser)</li>
+    <li>Default admin password rotated — original <code>password123</code> no longer works</li>
+    <li>Second admin user created so maker-checker works</li>
+    <li>GitHub repo is private</li>
+    <li>Daily DB backup cron added — one restore drill done</li>
+    <li>UptimeRobot (or similar) pinging <code>/api/health</code></li>
+    <li>Legal/compliance review done if real payouts enabled</li>
+    <li>You know how to roll back: <code>git revert &lt;sha&gt; &amp;&amp; docker compose up --build</code></li>
+  </ul>
+
+  <div class="foot">
+    <strong>Reward App</strong> · Operator's Book v1 · Oct 2026<br/>
+    Source code: <code>github.com/NectarScript/reward-app</code> · HEAD at time of writing: <code>e4d5d60</code><br/>
+    For deeper docs see <code>README.md</code>, <code>DEPLOY.md</code>, <code>SECURITY.md</code>, <code>OPERATOR.md</code> in the repo.
+  </div>
+</section>
+
+</div>
+
+</body>
+</html>
