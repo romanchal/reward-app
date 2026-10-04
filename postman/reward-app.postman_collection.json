@@ -1,0 +1,165 @@
+{
+  "info": {
+    "name": "Reward App",
+    "_postman_id": "a1b2c3d4-reward-app-collection",
+    "description": "Reward App demo-mode API collection. Set {{baseUrl}} and run Auth → Login first; accessToken is auto-saved.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:4000/api" },
+    { "key": "accessToken", "value": "" },
+    { "key": "withdrawalId", "value": "" },
+    { "key": "manualPaymentId", "value": "" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        { "name": "GET /health", "request": { "method": "GET", "url": "{{baseUrl}}/health", "auth": { "type": "noauth" } } },
+        { "name": "GET /ready",  "request": { "method": "GET", "url": "{{baseUrl}}/ready",  "auth": { "type": "noauth" } } }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "POST /auth/register",
+          "request": {
+            "method": "POST", "url": "{{baseUrl}}/auth/register",
+            "auth": { "type": "noauth" },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"demo+{{$timestamp}}@example.com\",\n  \"password\": \"password123\",\n  \"name\": \"Demo User\"\n}" }
+          },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "const body = pm.response.json(); if (body.accessToken) pm.collectionVariables.set('accessToken', body.accessToken);"
+          ], "type": "text/javascript" } }]
+        },
+        {
+          "name": "POST /auth/login",
+          "request": {
+            "method": "POST", "url": "{{baseUrl}}/auth/login",
+            "auth": { "type": "noauth" },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"demo1@example.com\",\n  \"password\": \"password123\"\n}" }
+          },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "const body = pm.response.json(); if (body.accessToken) pm.collectionVariables.set('accessToken', body.accessToken);"
+          ], "type": "text/javascript" } }]
+        },
+        { "name": "GET /auth/me",      "request": { "method": "GET",  "url": "{{baseUrl}}/auth/me" } },
+        { "name": "POST /auth/refresh","request": { "method": "POST", "url": "{{baseUrl}}/auth/refresh", "auth": { "type": "noauth" }, "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{}" } } },
+        { "name": "POST /auth/logout", "request": { "method": "POST", "url": "{{baseUrl}}/auth/logout", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{}" } } }
+      ]
+    },
+    {
+      "name": "Wallet & Earn",
+      "item": [
+        { "name": "GET /wallet",              "request": { "method": "GET", "url": "{{baseUrl}}/wallet" } },
+        { "name": "GET /wallet/transactions", "request": { "method": "GET", "url": "{{baseUrl}}/wallet/transactions?limit=20" } },
+        { "name": "GET /tasks",               "request": { "method": "GET", "url": "{{baseUrl}}/tasks" } },
+        { "name": "POST /tasks/:id/complete", "request": { "method": "POST", "url": "{{baseUrl}}/tasks/task-demo-1/complete", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"idempotencyKey\": \"demo-{{$timestamp}}\"\n}" } } },
+        { "name": "POST /daily-rewards",      "request": { "method": "POST", "url": "{{baseUrl}}/daily-rewards", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{}" } } },
+        { "name": "GET /missions",            "request": { "method": "GET", "url": "{{baseUrl}}/missions" } },
+        { "name": "POST /missions/:id/complete", "request": { "method": "POST", "url": "{{baseUrl}}/missions/mission-daily-1/complete", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{}" } } },
+        { "name": "GET /streak",              "request": { "method": "GET", "url": "{{baseUrl}}/streak" } },
+        { "name": "GET /leaderboard",         "request": { "method": "GET", "url": "{{baseUrl}}/leaderboard?limit=20" } },
+        { "name": "GET /offers",              "request": { "method": "GET", "url": "{{baseUrl}}/offers" } },
+        { "name": "GET /referrals",           "request": { "method": "GET", "url": "{{baseUrl}}/referrals" } },
+        { "name": "POST /referrals/apply",    "request": { "method": "POST", "url": "{{baseUrl}}/referrals/apply", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"code\": \"REFERRAL_CODE_HERE\"\n}" } } }
+      ]
+    },
+    {
+      "name": "Rewards & Withdrawals",
+      "item": [
+        { "name": "GET /rewards",           "request": { "method": "GET", "url": "{{baseUrl}}/rewards" } },
+        { "name": "POST /rewards/order",    "request": { "method": "POST", "url": "{{baseUrl}}/rewards/order", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"rewardId\": \"reward-demo-1\"\n}" } } },
+        { "name": "GET /rewards/orders",    "request": { "method": "GET", "url": "{{baseUrl}}/rewards/orders" } },
+        { "name": "GET /withdrawals",       "request": { "method": "GET", "url": "{{baseUrl}}/withdrawals" } },
+        {
+          "name": "POST /withdrawals",
+          "request": {
+            "method": "POST", "url": "{{baseUrl}}/withdrawals",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"amount\": 100,\n  \"method\": \"UPI\",\n  \"recipient\": \"demo@upi\"\n}" }
+          },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "const body = pm.response.json(); if (body.id) pm.collectionVariables.set('withdrawalId', body.id);"
+          ], "type": "text/javascript" } }]
+        }
+      ]
+    },
+    {
+      "name": "Admin · Users / Tasks",
+      "item": [
+        { "name": "GET /admin/dashboard",   "request": { "method": "GET", "url": "{{baseUrl}}/admin/dashboard" } },
+        { "name": "GET /admin/users",       "request": { "method": "GET", "url": "{{baseUrl}}/admin/users" } },
+        { "name": "POST /admin/users/:id/ban","request": { "method": "POST", "url": "{{baseUrl}}/admin/users/USER_ID/ban", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"banned\": true\n}" } } },
+        { "name": "GET /admin/tasks",       "request": { "method": "GET", "url": "{{baseUrl}}/admin/tasks" } },
+        { "name": "POST /admin/tasks",      "request": { "method": "POST", "url": "{{baseUrl}}/admin/tasks", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"title\": \"New demo task\",\n  \"reward\": 25,\n  \"xp\": 10,\n  \"isDemo\": true\n}" } } }
+      ]
+    },
+    {
+      "name": "Admin · Withdrawals",
+      "item": [
+        { "name": "GET /admin/withdrawals",         "request": { "method": "GET", "url": "{{baseUrl}}/admin/withdrawals" } },
+        { "name": "POST /admin/withdrawals/:id/approve", "request": { "method": "POST", "url": "{{baseUrl}}/admin/withdrawals/{{withdrawalId}}/approve", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"reason\": \"approved via postman\"\n}" } } },
+        { "name": "POST /admin/withdrawals/:id/reject",  "request": { "method": "POST", "url": "{{baseUrl}}/admin/withdrawals/{{withdrawalId}}/reject", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"reason\": \"rejected via postman\"\n}" } } },
+        { "name": "POST /admin/withdrawals/:id/process", "request": { "method": "POST", "url": "{{baseUrl}}/admin/withdrawals/{{withdrawalId}}/process", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{}" } } },
+        { "name": "POST /admin/withdrawals/:id/complete","request": { "method": "POST", "url": "{{baseUrl}}/admin/withdrawals/{{withdrawalId}}/complete", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{}" } } },
+        { "name": "POST /admin/withdrawals/bulk-approve","request": { "method": "POST", "url": "{{baseUrl}}/admin/withdrawals/bulk-approve", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"ids\": [\"{{withdrawalId}}\"]\n}" } } }
+      ]
+    },
+    {
+      "name": "Admin · Manual Payments",
+      "item": [
+        { "name": "GET /admin/manual-payments", "request": { "method": "GET", "url": "{{baseUrl}}/admin/manual-payments" } },
+        {
+          "name": "POST /admin/manual-payments",
+          "request": {
+            "method": "POST", "url": "{{baseUrl}}/admin/manual-payments",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"userId\": \"USER_ID\",\n  \"amount\": 500,\n  \"method\": \"CASH\",\n  \"referenceId\": \"RCPT-{{$timestamp}}\",\n  \"notes\": \"Offline cash payment\"\n}" }
+          },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "const body = pm.response.json(); if (body.id) pm.collectionVariables.set('manualPaymentId', body.id);"
+          ], "type": "text/javascript" } }]
+        },
+        { "name": "GET /admin/manual-payments/:id",           "request": { "method": "GET",  "url": "{{baseUrl}}/admin/manual-payments/{{manualPaymentId}}" } },
+        { "name": "GET /admin/manual-payments/:id/receipt",   "request": { "method": "GET",  "url": "{{baseUrl}}/admin/manual-payments/{{manualPaymentId}}/receipt" } },
+        { "name": "POST /admin/manual-payments/:id/approve",  "request": { "method": "POST", "url": "{{baseUrl}}/admin/manual-payments/{{manualPaymentId}}/approve", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{}" } } },
+        { "name": "POST /admin/manual-payments/:id/reject",   "request": { "method": "POST", "url": "{{baseUrl}}/admin/manual-payments/{{manualPaymentId}}/reject", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"reason\": \"invalid proof\"\n}" } } },
+        { "name": "POST /admin/manual-payments/csv-import",   "request": { "method": "POST", "url": "{{baseUrl}}/admin/manual-payments/csv-import", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"csv\": \"userId,amount,method,referenceId,notes\\nUSER_ID,500,CASH,BULK-001,row one\\nUSER_ID,750,UPI,BULK-002,row two\"\n}" } } }
+      ]
+    },
+    {
+      "name": "Admin · Fraud / Settings",
+      "item": [
+        { "name": "GET /admin/fraud",             "request": { "method": "GET", "url": "{{baseUrl}}/admin/fraud" } },
+        { "name": "POST /admin/fraud/:id/review", "request": { "method": "POST", "url": "{{baseUrl}}/admin/fraud/FRAUD_ID/review", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"decision\": \"CLEAN\"\n}" } } },
+        { "name": "GET /admin/settings",          "request": { "method": "GET", "url": "{{baseUrl}}/admin/settings" } },
+        { "name": "POST /admin/settings",         "request": { "method": "POST", "url": "{{baseUrl}}/admin/settings", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"key\": \"example.flag\",\n  \"value\": true\n}" } } }
+      ]
+    },
+    {
+      "name": "Webhooks",
+      "item": [
+        {
+          "name": "POST /webhooks/razorpay (test)",
+          "request": {
+            "method": "POST", "url": "{{baseUrl}}/webhooks/razorpay",
+            "auth": { "type": "noauth" },
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Razorpay-Signature", "value": "COMPUTE_HMAC_SHA256_OF_BODY_WITH_WEBHOOK_SECRET" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"event\": \"payout.processed\",\n  \"payload\": {\n    \"payout\": {\n      \"entity\": {\n        \"id\": \"pout_xxx\",\n        \"status\": \"processed\"\n      }\n    }\n  }\n}" }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -57,7 +57,9 @@ See `.env.example`. Never commit real secrets.
 - [SETUP_ON_YOUR_PC.md](SETUP_ON_YOUR_PC.md) — step-by-step local setup
 - [DEPLOY.md](DEPLOY.md) — production deployment with TLS reverse proxy
 - [SECURITY.md](SECURITY.md) — security posture, threat model, gaps
+- [OPERATOR.md](OPERATOR.md) — **everything you (human) must do** that Claude could not: Sentry DSN, Razorpay keys, TLS, DNS, backups, etc.
 - [web/PRODUCTION_BASE.md](web/PRODUCTION_BASE.md) — web UI prod baseline
+- [postman/](postman/) — Postman collection + environment (import both)
 
 ## Notes
 
